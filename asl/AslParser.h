@@ -257,7 +257,7 @@ public:
     Left_exprContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     IdentContext *ident();
-    ExprContext *expr();
+    antlr4::tree::TerminalNode *INTVAL();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;

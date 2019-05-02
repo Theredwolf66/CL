@@ -146,7 +146,6 @@ void SymbolsListener::exitArray_decl(AslParser::Array_declContext *ctx) {
   TypesMgr::TypeId t1;
   t1 = getTypeDecor(ctx->type());
   t = Types.createArrayTy(stoi(ctx->INTVAL()->getText()),t1);
-  std::cout << " en array_decl es " + t1 << endl;
   putTypeDecor(ctx, t);
   DEBUG_EXIT();
 }
