@@ -73,9 +73,6 @@ public:
   virtual void enterValue(AslParser::ValueContext * /*ctx*/) override { }
   virtual void exitValue(AslParser::ValueContext * /*ctx*/) override { }
 
-  virtual void enterArrayvalue(AslParser::ArrayvalueContext * /*ctx*/) override { }
-  virtual void exitArrayvalue(AslParser::ArrayvalueContext * /*ctx*/) override { }
-
   virtual void enterIdent(AslParser::IdentContext * /*ctx*/) override { }
   virtual void exitIdent(AslParser::IdentContext * /*ctx*/) override { }
 

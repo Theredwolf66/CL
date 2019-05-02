@@ -89,7 +89,7 @@ left_expr
         ;
         
 // Grammar for expressions with boolean, relational and aritmetic operators
-expr    : ident '[' expr ']'                        # arrayvalue
+expr    : ident '[' expr ']'                        # exprIdent
         | expr op=(MUL|DIV) expr                    # arithmetic
         | expr op=(PLUS|RES) expr                   # arithmetic
         | expr op=EQUAL expr                  # relational

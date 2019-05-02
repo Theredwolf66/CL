@@ -110,8 +110,13 @@ void SymbolsListener::exitVariable_decl(AslParser::Variable_declContext *ctx) {
                             Errors.declaredIdent(id);
                     }
                     else {
+                        if (ctx->type()) {
                             TypesMgr::TypeId t1 = getTypeDecor(ctx->type());
                             Symbols.addLocalVar(ident, t1);
+                        } else { //array_decl
+                            TypesMgr::TypeId t1 = getTypeDecor(ctx->array_decl()->type());
+                            Symbols.addLocalVar(ident, t1);
+                        }
                     }
     }
   DEBUG_EXIT();
@@ -146,7 +151,10 @@ void SymbolsListener::exitArray_decl(AslParser::Array_declContext *ctx) {
   TypesMgr::TypeId t1;
   t1 = getTypeDecor(ctx->type());
   t = Types.createArrayTy(stoi(ctx->INTVAL()->getText()),t1);
-  std::cout << " en array_decl es " + t1 << endl;
+  //std::cout << " en array_decl es " + t1 << endl;
+  std::cout << "t: " << t << std::endl;
+  //if (t1.isIntegerTy()) std::cout << "!!!!!! L'array es int !!!!!!" << std::endl;
+  //else std::cout << "bleh" << std::endl;
   putTypeDecor(ctx, t);
   DEBUG_EXIT();
 }

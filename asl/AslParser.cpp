@@ -995,6 +995,10 @@ AslParser::IdentContext* AslParser::ExprIdentContext::ident() {
   return getRuleContext<AslParser::IdentContext>(0);
 }
 
+AslParser::ExprContext* AslParser::ExprIdentContext::expr() {
+  return getRuleContext<AslParser::ExprContext>(0);
+}
+
 AslParser::ExprIdentContext::ExprIdentContext(ExprContext *ctx) { copyFrom(ctx); }
 
 void AslParser::ExprIdentContext::enterRule(tree::ParseTreeListener *listener) {
@@ -1101,28 +1105,6 @@ void AslParser::ValueContext::exitRule(tree::ParseTreeListener *listener) {
   if (parserListener != nullptr)
     parserListener->exitValue(this);
 }
-//----------------- ArrayvalueContext ------------------------------------------------------------------
-
-AslParser::IdentContext* AslParser::ArrayvalueContext::ident() {
-  return getRuleContext<AslParser::IdentContext>(0);
-}
-
-AslParser::ExprContext* AslParser::ArrayvalueContext::expr() {
-  return getRuleContext<AslParser::ExprContext>(0);
-}
-
-AslParser::ArrayvalueContext::ArrayvalueContext(ExprContext *ctx) { copyFrom(ctx); }
-
-void AslParser::ArrayvalueContext::enterRule(tree::ParseTreeListener *listener) {
-  auto parserListener = dynamic_cast<AslListener *>(listener);
-  if (parserListener != nullptr)
-    parserListener->enterArrayvalue(this);
-}
-void AslParser::ArrayvalueContext::exitRule(tree::ParseTreeListener *listener) {
-  auto parserListener = dynamic_cast<AslListener *>(listener);
-  if (parserListener != nullptr)
-    parserListener->exitArrayvalue(this);
-}
 
 AslParser::ExprContext* AslParser::expr() {
    return expr(0);
@@ -1148,7 +1130,7 @@ AslParser::ExprContext* AslParser::expr(int precedence) {
     _errHandler->sync(this);
     switch (getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 9, _ctx)) {
     case 1: {
-      _localctx = _tracker.createInstance<ArrayvalueContext>(_localctx);
+      _localctx = _tracker.createInstance<ExprIdentContext>(_localctx);
       _ctx = _localctx;
       previousContext = _localctx;
 

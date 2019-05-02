@@ -71,9 +71,6 @@ public:
   virtual void enterValue(AslParser::ValueContext *ctx) = 0;
   virtual void exitValue(AslParser::ValueContext *ctx) = 0;
 
-  virtual void enterArrayvalue(AslParser::ArrayvalueContext *ctx) = 0;
-  virtual void exitArrayvalue(AslParser::ArrayvalueContext *ctx) = 0;
-
   virtual void enterIdent(AslParser::IdentContext *ctx) = 0;
   virtual void exitIdent(AslParser::IdentContext *ctx) = 0;
 

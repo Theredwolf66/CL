@@ -284,6 +284,7 @@ public:
     ExprIdentContext(ExprContext *ctx);
 
     IdentContext *ident();
+    ExprContext *expr();
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
   };
@@ -323,16 +324,6 @@ public:
     antlr4::tree::TerminalNode *BOOLVAL();
     antlr4::tree::TerminalNode *CHARVAL();
     antlr4::tree::TerminalNode *FLOATVAL();
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-  };
-
-  class  ArrayvalueContext : public ExprContext {
-  public:
-    ArrayvalueContext(ExprContext *ctx);
-
-    IdentContext *ident();
-    ExprContext *expr();
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
   };

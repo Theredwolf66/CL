@@ -115,6 +115,7 @@ void TypeCheckListener::enterAssignStmt(AslParser::AssignStmtContext *ctx) {
 void TypeCheckListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
   TypesMgr::TypeId t1 = getTypeDecor(ctx->left_expr());
   TypesMgr::TypeId t2 = getTypeDecor(ctx->expr());
+  std::cout << "t1: " << t1 << " t2: " << t2 << std::endl;
   if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and
       (not Types.copyableTypes(t1, t2)))
     Errors.incompatibleAssignment(ctx->ASSIGN());
@@ -256,6 +257,8 @@ void TypeCheckListener::exitExprIdent(AslParser::ExprIdentContext *ctx) {
   DEBUG_EXIT();
 }
 
+
+
 void TypeCheckListener::enterIdent(AslParser::IdentContext *ctx) {
   DEBUG_ENTER();
 }
@@ -269,6 +272,8 @@ void TypeCheckListener::exitIdent(AslParser::IdentContext *ctx) {
   }
   else {
     TypesMgr::TypeId t1 = Symbols.getType(ident);
+    std::cout << "Ident: " << ident << std::endl;
+    std::cout << "Tipus: " << t1 << std::endl;
     putTypeDecor(ctx, t1);
     if (Symbols.isFunctionClass(ident))
       putIsLValueDecor(ctx, false);

@@ -105,6 +105,14 @@ void CodeGenListener::exitVariable_decl(AslParser::Variable_declContext *ctx) {
   DEBUG_EXIT();
 }
 
+//TODO TODO TODO
+//     TODO
+//     TODO
+//     TODO       Fer que les arrays escriguin el seu codi correctament
+//     TODO
+//     TODO
+//     TODO
+
 void CodeGenListener::enterType(AslParser::TypeContext *ctx) {
   DEBUG_ENTER();
 }
