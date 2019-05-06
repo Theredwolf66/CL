@@ -85,7 +85,7 @@ procedure
 // Grammar for left expressions (l-values in C++)
 left_expr
         : ident
-        | ident '[' INTVAL ']' //TODO que sea por aritmetica tambien no solo intval.
+        | ident '[' expr ']' //TODO que sea por aritmetica tambien no solo intval.
         ;
         
 // Grammar for expressions with boolean, relational and aritmetic operators

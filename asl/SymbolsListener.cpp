@@ -114,9 +114,10 @@ void SymbolsListener::exitVariable_decl(AslParser::Variable_declContext *ctx) {
                             TypesMgr::TypeId t1 = getTypeDecor(ctx->type());
                             Symbols.addLocalVar(ident, t1);
                         } else { //array_decl
-                            TypesMgr::TypeId t1 = getTypeDecor(ctx->array_decl()->type());
+                            TypesMgr::TypeId t1 = getTypeDecor(ctx->array_decl());
                             Symbols.addLocalVar(ident, t1);
                         }
+                        
                     }
     }
   DEBUG_EXIT();
