@@ -323,20 +323,26 @@ void CodeGenListener::enterRelational(AslParser::RelationalContext *ctx) {
   DEBUG_ENTER();
 }
 void CodeGenListener::exitRelational(AslParser::RelationalContext *ctx) {
-  std::string     addr1 = getAddrDecor(ctx->expr(0));
-  instructionList code1 = getCodeDecor(ctx->expr(0));
-  std::string     addr2 = getAddrDecor(ctx->expr(1));
-  instructionList code2 = getCodeDecor(ctx->expr(1));
-  instructionList code  = code1 || code2;
-  // TypesMgr::TypeId t1 = getTypeDecor(ctx->expr(0));
-  // TypesMgr::TypeId t2 = getTypeDecor(ctx->expr(1));
-  // TypesMgr::TypeId t  = getTypeDecor(ctx);
-  std::string temp = "%"+codeCounters.newTEMP();
-  code = code || instruction::EQ(temp, addr1, addr2);
-  putAddrDecor(ctx, temp);
-  putOffsetDecor(ctx, temp);
-  putCodeDecor(ctx, code);
-  DEBUG_EXIT();
+    std::string temp = "%"+codeCounters.newTEMP();
+    std::string     addr1 = getAddrDecor(ctx->expr(0));
+    instructionList code1 = getCodeDecor(ctx->expr(0));
+    // TypesMgr::TypeId t1 = getTypeDecor(ctx->expr(0));
+    instructionList code;
+    if (ctx->NOT()) { //NOT
+        code = code1 || instruction::NOT(temp, addr1);
+    } else {
+        std::string     addr2 = getAddrDecor(ctx->expr(1));
+        instructionList code2 = getCodeDecor(ctx->expr(1));
+        code  = code1 || code2;
+
+        // TypesMgr::TypeId t2 = getTypeDecor(ctx->expr(1));
+        // TypesMgr::TypeId t  = getTypeDecor(ctx);
+        if (ctx->EQUAL()) code = code || instruction::EQ(temp, addr1, addr2);
+    } //TODO ficar la resta d'operadors relacionals
+    putAddrDecor(ctx, temp); 
+    putOffsetDecor(ctx, temp);
+    putCodeDecor(ctx, code);
+    DEBUG_EXIT();
 }
 
 void CodeGenListener::enterValue(AslParser::ValueContext *ctx) {

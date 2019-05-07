@@ -213,16 +213,25 @@ void TypeCheckListener::enterRelational(AslParser::RelationalContext *ctx) {
   DEBUG_ENTER();
 }
 void TypeCheckListener::exitRelational(AslParser::RelationalContext *ctx) {
-  TypesMgr::TypeId t1 = getTypeDecor(ctx->expr(0));
-  TypesMgr::TypeId t2 = getTypeDecor(ctx->expr(1));
-  std::string oper = ctx->op->getText();
-  if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and
-      (not Types.comparableTypes(t1, t2, oper)))
-    Errors.incompatibleOperator(ctx->op);
-  TypesMgr::TypeId t = Types.createBooleanTy();
-  putTypeDecor(ctx, t);
-  putIsLValueDecor(ctx, false);
-  DEBUG_EXIT();
+    if (ctx->NOT()) {
+        TypesMgr::TypeId t1 = getTypeDecor(ctx->expr(0));
+        TypesMgr::TypeId t = Types.createBooleanTy();
+        if ((not Types.isErrorTy(t1)) and not Types.isBooleanTy(t1)) 
+            Errors.booleanRequired(ctx);
+        putTypeDecor(ctx, t);
+        putIsLValueDecor(ctx, false);
+        DEBUG_EXIT();
+    } else {
+        TypesMgr::TypeId t1 = getTypeDecor(ctx->expr(0));
+        TypesMgr::TypeId t2 = getTypeDecor(ctx->expr(1));
+        std::string oper = ctx->op->getText();
+        if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and (not Types.comparableTypes(t1, t2, oper)))
+            Errors.incompatibleOperator(ctx->op);
+        TypesMgr::TypeId t = Types.createBooleanTy();
+        putTypeDecor(ctx, t);
+        putIsLValueDecor(ctx, false);
+        DEBUG_EXIT();
+    }
 }
 
 void TypeCheckListener::enterValue(AslParser::ValueContext *ctx) {

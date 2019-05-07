@@ -90,9 +90,11 @@ left_expr
         
 // Grammar for expressions with boolean, relational and aritmetic operators
 expr    : ident '[' expr ']'                        # exprIdent
+        | NOT expr                                  # relational
         | expr op=(MUL|DIV) expr                    # arithmetic
         | expr op=(PLUS|RES) expr                   # arithmetic
         | expr op=EQUAL expr                  # relational
+        | expr op=(AND|OR) expr               # relational
         | INTVAL                              # value
         | BOOLVAL                              # value
         | CHARVAL                              # value
@@ -120,6 +122,10 @@ FLOAT     : 'float';
 BOOL      : 'bool';
 CHAR      : 'char';
 ARRAY     : 'array';
+
+NOT       : 'not';
+AND       : 'and';
+OR        : 'or';
 
 IF        : 'if' ;
 THEN      : 'then' ;

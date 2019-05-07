@@ -14,10 +14,10 @@ public:
   enum {
     T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, 
     ASSIGN = 8, EQUAL = 9, PLUS = 10, MUL = 11, RES = 12, DIV = 13, VAR = 14, 
-    INT = 15, FLOAT = 16, BOOL = 17, CHAR = 18, ARRAY = 19, IF = 20, THEN = 21, 
-    ELSE = 22, ENDIF = 23, FUNC = 24, ENDFUNC = 25, READ = 26, WRITE = 27, 
-    BOOLVAL = 28, ID = 29, COMA = 30, INTVAL = 31, FLOATVAL = 32, CHARVAL = 33, 
-    STRING = 34, COMMENT = 35, WS = 36
+    INT = 15, FLOAT = 16, BOOL = 17, CHAR = 18, ARRAY = 19, NOT = 20, AND = 21, 
+    OR = 22, IF = 23, THEN = 24, ELSE = 25, ENDIF = 26, FUNC = 27, ENDFUNC = 28, 
+    READ = 29, WRITE = 30, BOOLVAL = 31, ID = 32, COMA = 33, INTVAL = 34, 
+    FLOATVAL = 35, CHARVAL = 36, STRING = 37, COMMENT = 38, WS = 39
   };
 
   enum {
@@ -309,9 +309,12 @@ public:
     RelationalContext(ExprContext *ctx);
 
     antlr4::Token *op = nullptr;
+    antlr4::tree::TerminalNode *NOT();
     std::vector<ExprContext *> expr();
     ExprContext* expr(size_t i);
     antlr4::tree::TerminalNode *EQUAL();
+    antlr4::tree::TerminalNode *AND();
+    antlr4::tree::TerminalNode *OR();
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
   };
