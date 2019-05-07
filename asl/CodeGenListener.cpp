@@ -145,8 +145,15 @@ void CodeGenListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
         auto code2 = getCodeDecor(ctx->expr());
         TypesMgr::TypeId tid2 = getTypeDecor(ctx->expr());
         auto code = code1 || code2;
-
-        if(offs1 != "" && (Types.isArrayTy(tid1))) { //&& (Types.isArrayTy(tid1))
+        
+         if(Types.isArrayTy(tid1) && Types.isArrayTy(tid2))  {
+            auto identName = ctx->left_expr()->ident()->ID()->getText();
+                code = code || instruction::ALOAD(addr1, addr2);
+                putCodeDecor(ctx, code);
+                DEBUG_EXIT();
+                return;
+        }
+        else if(offs1 != "" && (Types.isArrayTy(tid1))) { //&& (Types.isArrayTy(tid1))
                 auto identName = ctx->left_expr()->ident()->ID()->getText();
 
                 if (Symbols.isParameterClass(identName)) {
