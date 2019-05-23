@@ -65,8 +65,11 @@ statements
 
 // The different types of instructions
 statement
-          // Assignment
-        : left_expr ASSIGN expr ';'           # assignStmt
+          
+        : left_expr ASSIGN ident '[' INTVAL ']' ';'  #assignStmtSimple //TODO
+        | left_expr ASSIGN ident '[' expr ']' ';'  #assignStmtSimple
+        // Assignment
+        left_expr ASSIGN expr ';'           # assignStmt
           // if-then-else statement (else is optional)
         | IF expr THEN statements ENDIF       # ifStmt
           // A function/procedure call has a list of arguments in parenthesis (possibly empty)
@@ -87,11 +90,11 @@ left_expr
         : ident
         | ident '[' INTVAL ']'
         | ident '[' expr ']' //TODO que sea por aritmetica tambien no solo intval.
-        ;
+        ;        
         
 // Grammar for expressions with boolean, relational and aritmetic operators
 expr    : '(' expr ')'                              # parenthesis
-        | ident '[' INTVAL ']'                        # exprIdent
+        | ident '[' INTVAL ']'                        # exprIdent //TODO Propagar correctament el codi, fer que les arrays aqui dins funcionin
         | ident '[' expr ']'                        # exprIdent
         | NOT expr                                  # relational
         | expr op=(MUL|DIV) expr                    # arithmetic

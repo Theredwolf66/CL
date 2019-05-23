@@ -120,7 +120,7 @@ void CodeGenListener::exitType(AslParser::TypeContext *ctx) {
   DEBUG_EXIT();
 }
 
-void CodeGenListener::enterStatements(AslPars -fpermissiveer::StatementsContext *ctx) {
+void CodeGenListener::enterStatements(AslParser::StatementsContext *ctx) {
   DEBUG_ENTER();
 }
 void CodeGenListener::exitStatements(AslParser::StatementsContext *ctx) {
@@ -150,8 +150,8 @@ void CodeGenListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
             code = code || instruction::XLOAD(addr1, offs1, addr2);
         } //else if ((ctx->exprIdent()->INTVAL() or ctx->exprIdent()->expr()) and ctx->exprIdent()->ident()) {
         else if (ctx->expr()) {
-            AslParser::ExprIdentContext *expr1 = ctx->expr();
-            if (expr1->INTVAL()) code = code || instruction::LOADX(addr1, addr2, offs1);
+            //AslParser::ExprIdentContext *expr1 = ctx->expr();
+            //if (expr1->INTVAL()) code = code || instruction::LOADX(addr1, addr2, offs1);
         } 
         
          /*if(Types.isArrayTy(tid1) && Types.isArrayTy(tid2))  {

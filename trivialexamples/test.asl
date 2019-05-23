@@ -1,7 +1,7 @@
 func main()
   var a: array[7] of int
   var b: int
-  a[1+2] = 2;
+  a[a[1]] = 2;
 
   a = a;
   b = a[2];
