@@ -85,11 +85,13 @@ procedure
 // Grammar for left expressions (l-values in C++)
 left_expr
         : ident
+        | ident '[' INTVAL ']'
         | ident '[' expr ']' //TODO que sea por aritmetica tambien no solo intval.
         ;
         
 // Grammar for expressions with boolean, relational and aritmetic operators
-expr    : ident '[' expr ']'                        # exprIdent
+expr    : ident '[' INTVAL ']'                        # exprIdent
+        | ident '[' expr ']'                        # exprIdent
         | NOT expr                                  # relational
         | expr op=(MUL|DIV) expr                    # arithmetic
         | expr op=(PLUS|RES) expr                   # arithmetic

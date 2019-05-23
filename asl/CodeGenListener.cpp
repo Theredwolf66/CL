@@ -284,7 +284,11 @@ void CodeGenListener::enterLeft_expr(AslParser::Left_exprContext *ctx) {
 void CodeGenListener::exitLeft_expr(AslParser::Left_exprContext *ctx) {
   putAddrDecor(ctx, getAddrDecor(ctx->ident()));
   //putOffsetDecor(ctx, getOffsetDecor(ctx->ident()));
-  if (ctx->expr()) {
+  if (ctx->INTVAL()) {
+      putOffsetDecor(ctx, ctx->INTVAL()->getText());
+      putCodeDecor(ctx, getCodeDecor(ctx->ident()));
+  }
+  else if (ctx->expr()) {
       putOffsetDecor(ctx, getOffsetDecor(ctx->expr()));
       putCodeDecor(ctx, getCodeDecor(ctx->expr()));
   }
@@ -394,7 +398,11 @@ void CodeGenListener::enterExprIdent(AslParser::ExprIdentContext *ctx) {
 void CodeGenListener::exitExprIdent(AslParser::ExprIdentContext *ctx) {
   putAddrDecor(ctx, getAddrDecor(ctx->ident()));
   
-  if (ctx->expr()) {
+  if (ctx->INTVAL()) {
+      putOffsetDecor(ctx, ctx->INTVAL()->getText());
+      putCodeDecor(ctx, getCodeDecor(ctx->ident()));
+  }
+  else if (ctx->expr()) {
       //std::cout << "Hem passat per aqui!  :" << getOffsetDecor(ctx->expr()) << std::endl;
       instructionList code = getCodeDecor(ctx->expr());
       putCodeDecor(ctx, code);
