@@ -90,7 +90,8 @@ left_expr
         ;
         
 // Grammar for expressions with boolean, relational and aritmetic operators
-expr    : ident '[' INTVAL ']'                        # exprIdent
+expr    : '(' expr ')'                              # parenthesis
+        | ident '[' INTVAL ']'                        # exprIdent
         | ident '[' expr ']'                        # exprIdent
         | NOT expr                                  # relational
         | expr op=(MUL|DIV) expr                    # arithmetic

@@ -330,6 +330,18 @@ void CodeGenListener::exitArithmetic(AslParser::ArithmeticContext *ctx) {
   DEBUG_EXIT();
 }
 
+void CodeGenListener::enterParenthesis(AslParser::ParenthesisContext *ctx) {
+    DEBUG_ENTER();
+}
+void CodeGenListener::exitParenthesis(AslParser::ParenthesisContext *ctx) {
+    std::string     addr1 = getAddrDecor(ctx->expr());
+    instructionList code1 = getCodeDecor(ctx->expr());
+    putAddrDecor(ctx, addr1); 
+    putOffsetDecor(ctx, addr1);
+    putCodeDecor(ctx, code1);
+    DEBUG_EXIT();
+}
+
 void CodeGenListener::enterRelational(AslParser::RelationalContext *ctx) {
   DEBUG_ENTER();
 }
@@ -349,6 +361,8 @@ void CodeGenListener::exitRelational(AslParser::RelationalContext *ctx) {
         // TypesMgr::TypeId t2 = getTypeDecor(ctx->expr(1));
         // TypesMgr::TypeId t  = getTypeDecor(ctx);
         if (ctx->EQUAL()) code = code || instruction::EQ(temp, addr1, addr2);
+        else if (ctx->AND()) code = code || instruction::AND(temp, addr1, addr2);
+        else /* if (ctx->OR()) */ code = code || instruction::OR(temp, addr1, addr2);
     } //TODO ficar la resta d'operadors relacionals
     putAddrDecor(ctx, temp); 
     putOffsetDecor(ctx, temp);

@@ -70,6 +70,9 @@ public:
   virtual void enterRelational(AslParser::RelationalContext * /*ctx*/) override { }
   virtual void exitRelational(AslParser::RelationalContext * /*ctx*/) override { }
 
+  virtual void enterParenthesis(AslParser::ParenthesisContext * /*ctx*/) override { }
+  virtual void exitParenthesis(AslParser::ParenthesisContext * /*ctx*/) override { }
+
   virtual void enterValue(AslParser::ValueContext * /*ctx*/) override { }
   virtual void exitValue(AslParser::ValueContext * /*ctx*/) override { }
 

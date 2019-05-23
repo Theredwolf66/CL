@@ -117,7 +117,6 @@ void TypeCheckListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
   if (Types.isArrayTy(t1)) t1 = Types.getArrayElemType(t1);
   TypesMgr::TypeId t2 = getTypeDecor(ctx->expr());
   if (Types.isArrayTy(t2)) t2 = Types.getArrayElemType(t2);
-  std::cout << "t1: " << t1 << " t2: " << t2 << std::endl;
   if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and
       (not Types.copyableTypes(t1, t2)))
     Errors.incompatibleAssignment(ctx->ASSIGN());
@@ -221,9 +220,21 @@ void TypeCheckListener::exitRelational(AslParser::RelationalContext *ctx) {
         putTypeDecor(ctx, t);
         putIsLValueDecor(ctx, false);
         DEBUG_EXIT();
+    } else if (not ctx->EQUAL()) {
+        TypesMgr::TypeId t1 = getTypeDecor(ctx->expr(0));
+        TypesMgr::TypeId t2 = getTypeDecor(ctx->expr(1));
+        //std::cout << "t1: " << t1 << " t2: " << t2 << std::endl;
+        std::string oper = ctx->op->getText();
+        if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and (not Types.isBooleanTy(t1)) and (not Types.isBooleanTy(t2)))
+            Errors.incompatibleOperator(ctx->op);
+        TypesMgr::TypeId t = Types.createBooleanTy();
+        putTypeDecor(ctx, t);
+        putIsLValueDecor(ctx, false);
+        DEBUG_EXIT();
     } else {
         TypesMgr::TypeId t1 = getTypeDecor(ctx->expr(0));
         TypesMgr::TypeId t2 = getTypeDecor(ctx->expr(1));
+        //std::cout << "t1: " << t1 << " t2: " << t2 << std::endl;
         std::string oper = ctx->op->getText();
         if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and (not Types.comparableTypes(t1, t2, oper)))
             Errors.incompatibleOperator(ctx->op);
@@ -279,6 +290,16 @@ void TypeCheckListener::exitExprIdent(AslParser::ExprIdentContext *ctx) { //REME
     DEBUG_EXIT();
 }
 
+
+void TypeCheckListener::enterParenthesis(AslParser::ParenthesisContext *ctx) {
+    DEBUG_ENTER();
+}
+void TypeCheckListener::exitParenthesis(AslParser::ParenthesisContext *ctx) {
+    TypesMgr::TypeId t = getTypeDecor(ctx->expr());
+    putTypeDecor(ctx, t);
+    putIsLValueDecor(ctx, false);
+    DEBUG_EXIT();
+}
 
 
 void TypeCheckListener::enterIdent(AslParser::IdentContext *ctx) {

@@ -68,6 +68,9 @@ public:
   virtual void enterRelational(AslParser::RelationalContext *ctx) = 0;
   virtual void exitRelational(AslParser::RelationalContext *ctx) = 0;
 
+  virtual void enterParenthesis(AslParser::ParenthesisContext *ctx) = 0;
+  virtual void exitParenthesis(AslParser::ParenthesisContext *ctx) = 0;
+
   virtual void enterValue(AslParser::ValueContext *ctx) = 0;
   virtual void exitValue(AslParser::ValueContext *ctx) = 0;
 

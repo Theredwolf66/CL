@@ -1,7 +1,6 @@
 func main()
-  var p: array [10] of int
-  var x,y: int
-  p[1] = 2;
-  x = p[2];
-  x = p[1];
+  var a,b,c,d,e,f: bool
+  var x,y,z: int
+  a = a and b and (c or d and e) or f;
+  x = 1+(2-3)+(y-z);
 endfunc

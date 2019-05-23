@@ -321,6 +321,15 @@ public:
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
   };
 
+  class  ParenthesisContext : public ExprContext {
+  public:
+    ParenthesisContext(ExprContext *ctx);
+
+    ExprContext *expr();
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+  };
+
   class  ValueContext : public ExprContext {
   public:
     ValueContext(ExprContext *ctx);

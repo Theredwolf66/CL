@@ -153,7 +153,7 @@ void SymbolsListener::exitArray_decl(AslParser::Array_declContext *ctx) {
   t1 = getTypeDecor(ctx->type());
   t = Types.createArrayTy(stoi(ctx->INTVAL()->getText()),t1);
   //std::cout << " en array_decl es " + t1 << endl;
-  std::cout << "t: " << t << std::endl;
+  //std::cout << "t: " << t << std::endl;
   //if (t1.isIntegerTy()) std::cout << "!!!!!! L'array es int !!!!!!" << std::endl;
   //else std::cout << "bleh" << std::endl;
   putTypeDecor(ctx, t);
