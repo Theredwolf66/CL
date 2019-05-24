@@ -118,8 +118,7 @@ void TypeCheckListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
   TypesMgr::TypeId t2 = getTypeDecor(ctx->expr());
   //if (Types.isArrayTy(t2)) t2 = Types.getArrayElemType(t2);
   std::cout << "t1: " << t1 << " t2: " << t2 << std::endl;
-  if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and
-      (not Types.copyableTypes(t1, t2)))
+  if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and (not Types.copyableTypes(t1, t2)))
     Errors.incompatibleAssignment(ctx->ASSIGN());
   if ((not Types.isErrorTy(t1)) and (not getIsLValueDecor(ctx->left_expr())))
     Errors.nonReferenceableLeftExpr(ctx->left_expr());
@@ -292,7 +291,9 @@ void TypeCheckListener::exitExprIdent(AslParser::ExprIdentContext *ctx) { //REME
         putTypeDecor(ctx, Types.getArrayElemType(t));
         if (ctx->expr()) {
             TypesMgr::TypeId t1 = getTypeDecor(ctx->expr());
-            if (!Types.isNumericTy(t1)) Errors.nonIntegerIndexInArrayAccess(ctx->expr());
+            if (!Types.isNumericTy(t1)) {
+                Errors.nonIntegerIndexInArrayAccess(ctx->expr());
+            }
         }
     } else {
         putTypeDecor(ctx, t);

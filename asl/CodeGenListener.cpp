@@ -146,19 +146,32 @@ void CodeGenListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
         TypesMgr::TypeId tid2 = getTypeDecor(ctx->expr());
         auto code = code1 || code2;
         if (ctx->left_expr()->INTVAL() or ctx->left_expr()->expr()) {
+
+            if (ctx->ident()) {
+                auto temp = "%" + codeCounters.newTEMP();
+                if (ctx->INTVAL()) code = code || instruction::LOADX(temp,getAddrDecor(ctx->ident()),ctx->INTVAL()->getText());
+                else if(ctx->expr()) {
+                    code = code || instruction::LOADX(temp, getAddrDecor(ctx->ident()),getOffsetDecor(ctx->expr()));
+                }
+                addr2 = temp;
+             }
+
             code = code || instruction::XLOAD(addr1, offs1, addr2);
-            putCodeDecor(ctx, code);
-            DEBUG_EXIT();
-            return;
+
         } else if (ctx->ident()) {
             if (ctx->INTVAL())code = code || instruction::LOADX(addr1,getAddrDecor(ctx->ident()),ctx->INTVAL()->getText());
             else if(ctx->expr()) {
                 code = code || instruction::LOADX(addr1, getAddrDecor(ctx->ident()),getOffsetDecor(ctx->expr()));
             }
-            putCodeDecor(ctx, code);
-            DEBUG_EXIT();
-            return;
-         }
+
+        } else if(Types.isArrayTy(tid2)){
+            code = code || instruction::ALOAD(addr1, addr2);
+        } else {
+            code = code || instruction::LOAD(addr1, addr2);
+        }
+
+        putCodeDecor(ctx, code);
+        DEBUG_EXIT();
          /*if(Types.isArrayTy(tid1) && Types.isArrayTy(tid2))  {
             auto identName = ctx->left_expr()->ident()->ID()->getText();
                 code = code || instruction::ALOAD(addr1, addr2);
@@ -194,9 +207,7 @@ void CodeGenListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
                 return;
         }*/
 
-        code = code || instruction::LOAD(addr1, addr2);
-        putCodeDecor(ctx, code);
-        DEBUG_EXIT();
+
 }
 
 void CodeGenListener::enterIfStmt(AslParser::IfStmtContext *ctx) {
@@ -432,12 +443,11 @@ void CodeGenListener::exitExprIdent(AslParser::ExprIdentContext *ctx) {
       putOffsetDecor(ctx, temp);
       putCodeDecor(ctx, code);
   }
-  else if (ctx->expr()) {
-      //std::cout << "Hem passat per aqui!  :" << getOffsetDecor(ctx->expr()) << std::endl;
+  else if (ctx->expr()){
       instructionList code = getCodeDecor(ctx->expr());
       std::string temp = "%"+codeCounters.newTEMP();
-      code  = code || instruction::LOADX(temp,getAddrDecor(ctx->ident()),getOffsetDecor(ctx->expr()));
-      putOffsetDecor(ctx, getOffsetDecor(ctx->expr()));
+      code = code || instruction::LOADX(temp,getAddrDecor(ctx->ident()),getOffsetDecor(ctx->expr()));
+      putOffsetDecor(ctx, temp);
       putCodeDecor(ctx, code);
       //TODO Mirar si cal i implementar ficar arrays dins d'arrays. El problema segurament es a que passa el offset incorrecte, i hauria de passar una var temp
       //TODO alternativament comprovar que no hi hagi arrays dins d'arrays, que si no es lia
@@ -453,7 +463,9 @@ void CodeGenListener::enterIdent(AslParser::IdentContext *ctx) {
   DEBUG_ENTER();
 }
 void CodeGenListener::exitIdent(AslParser::IdentContext *ctx) {
+
   putAddrDecor(ctx, ctx->ID()->getText());
+  std::cout << "pongo " << getAddrDecor(ctx) << std::endl;
   putOffsetDecor(ctx, ctx->ID()->getText());
   putCodeDecor(ctx, instructionList());
   DEBUG_EXIT();
