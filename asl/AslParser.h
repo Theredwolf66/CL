@@ -220,6 +220,8 @@ public:
 
     Left_exprContext *left_expr();
     antlr4::tree::TerminalNode *ASSIGN();
+    IdentContext *ident();
+    antlr4::tree::TerminalNode *INTVAL();
     ExprContext *expr();
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;

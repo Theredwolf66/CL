@@ -66,10 +66,10 @@ statements
 // The different types of instructions
 statement
           
-        : left_expr ASSIGN ident '[' INTVAL ']' ';'  #assignStmtSimple //TODO
-        | left_expr ASSIGN ident '[' expr ']' ';'  #assignStmtSimple
+        : left_expr ASSIGN ident '[' INTVAL ']' ';'  #assignStmt 
+        | left_expr ASSIGN ident '[' expr ']' ';'  #assignStmt
         // Assignment
-        left_expr ASSIGN expr ';'           # assignStmt
+        | left_expr ASSIGN expr ';'           # assignStmt
           // if-then-else statement (else is optional)
         | IF expr THEN statements ENDIF       # ifStmt
           // A function/procedure call has a list of arguments in parenthesis (possibly empty)

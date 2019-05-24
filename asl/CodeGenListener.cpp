@@ -145,15 +145,20 @@ void CodeGenListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
         auto code2 = getCodeDecor(ctx->expr());
         TypesMgr::TypeId tid2 = getTypeDecor(ctx->expr());
         auto code = code1 || code2;
-        
         if (ctx->left_expr()->INTVAL() or ctx->left_expr()->expr()) {
             code = code || instruction::XLOAD(addr1, offs1, addr2);
-        } //else if ((ctx->exprIdent()->INTVAL() or ctx->exprIdent()->expr()) and ctx->exprIdent()->ident()) {
-        else if (ctx->expr()) {
-            //AslParser::ExprIdentContext *expr1 = ctx->expr();
-            //if (expr1->INTVAL()) code = code || instruction::LOADX(addr1, addr2, offs1);
-        } 
-        
+            putCodeDecor(ctx, code);
+            DEBUG_EXIT();
+            return;
+        } else if (ctx->ident()) {
+            if (ctx->INTVAL())code = code || instruction::LOADX(addr1,getAddrDecor(ctx->ident()),ctx->INTVAL()->getText());
+            else if(ctx->expr()) {
+                code = code || instruction::LOADX(addr1, getAddrDecor(ctx->ident()),getOffsetDecor(ctx->expr()));
+            }
+            putCodeDecor(ctx, code);
+            DEBUG_EXIT();
+            return;
+         }
          /*if(Types.isArrayTy(tid1) && Types.isArrayTy(tid2))  {
             auto identName = ctx->left_expr()->ident()->ID()->getText();
                 code = code || instruction::ALOAD(addr1, addr2);
@@ -320,11 +325,11 @@ void CodeGenListener::exitArithmetic(AslParser::ArithmeticContext *ctx) {
   // TypesMgr::TypeId t1 = getTypeDecor(ctx->expr(0));
   // TypesMgr::TypeId t2 = getTypeDecor(ctx->expr(1));
   // TypesMgr::TypeId t  = getTypeDecor(ctx);
-  
+
   std::string temp = "%"+codeCounters.newTEMP();
-  
+
   std::cout << "Construint variable temp: " << temp << std::endl;
-  
+
   if (ctx->MUL())
     code = code || instruction::MUL(temp, addr1, addr2);
   else  if (ctx->DIV())
@@ -345,7 +350,7 @@ void CodeGenListener::enterParenthesis(AslParser::ParenthesisContext *ctx) {
 void CodeGenListener::exitParenthesis(AslParser::ParenthesisContext *ctx) {
     std::string     addr1 = getAddrDecor(ctx->expr());
     instructionList code1 = getCodeDecor(ctx->expr());
-    putAddrDecor(ctx, addr1); 
+    putAddrDecor(ctx, addr1);
     putOffsetDecor(ctx, addr1);
     putCodeDecor(ctx, code1);
     DEBUG_EXIT();
@@ -373,7 +378,7 @@ void CodeGenListener::exitRelational(AslParser::RelationalContext *ctx) {
         else if (ctx->AND()) code = code || instruction::AND(temp, addr1, addr2);
         else /* if (ctx->OR()) */ code = code || instruction::OR(temp, addr1, addr2);
     } //TODO ficar la resta d'operadors relacionals
-    putAddrDecor(ctx, temp); 
+    putAddrDecor(ctx, temp);
     putOffsetDecor(ctx, temp);
     putCodeDecor(ctx, code);
     DEBUG_EXIT();
@@ -409,7 +414,7 @@ void CodeGenListener::exitValue(AslParser::ValueContext *ctx) {
     }
     code = instruction::ILOAD(temp, text);
   }
-  putAddrDecor(ctx, temp); 
+  putAddrDecor(ctx, temp);
   //putOffsetDecor(ctx, "");
   putCodeDecor(ctx, code);
   DEBUG_EXIT();
@@ -420,16 +425,20 @@ void CodeGenListener::enterExprIdent(AslParser::ExprIdentContext *ctx) {
 }
 void CodeGenListener::exitExprIdent(AslParser::ExprIdentContext *ctx) {
   putAddrDecor(ctx, getAddrDecor(ctx->ident()));
-  
+
   if (ctx->INTVAL()) {
-      putOffsetDecor(ctx, ctx->INTVAL()->getText());
-      putCodeDecor(ctx, getCodeDecor(ctx->ident()));
+      std::string temp = "%"+codeCounters.newTEMP();
+      instructionList code  = instruction::LOADX(temp,getAddrDecor(ctx->ident()),ctx->INTVAL()->getText());
+      putOffsetDecor(ctx, temp);
+      putCodeDecor(ctx, code);
   }
   else if (ctx->expr()) {
       //std::cout << "Hem passat per aqui!  :" << getOffsetDecor(ctx->expr()) << std::endl;
       instructionList code = getCodeDecor(ctx->expr());
-      putCodeDecor(ctx, code);
+      std::string temp = "%"+codeCounters.newTEMP();
+      code  = code || instruction::LOADX(temp,getAddrDecor(ctx->ident()),getOffsetDecor(ctx->expr()));
       putOffsetDecor(ctx, getOffsetDecor(ctx->expr()));
+      putCodeDecor(ctx, code);
       //TODO Mirar si cal i implementar ficar arrays dins d'arrays. El problema segurament es a que passa el offset incorrecte, i hauria de passar una var temp
       //TODO alternativament comprovar que no hi hagi arrays dins d'arrays, que si no es lia
   }
