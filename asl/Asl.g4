@@ -100,7 +100,8 @@ expr    : '(' expr ')'                              # parenthesis
         | expr op=(MUL|DIV) expr                    # arithmetic
         | expr op=(PLUS|RES) expr                   # arithmetic
         | expr op=EQUAL expr                  # relational
-        | expr op=(AND|OR) expr               # relational
+        | expr op=AND expr               # relational
+        | expr op=OR expr               # relational
         | INTVAL                              # value
         | BOOLVAL                              # value
         | CHARVAL                              # value
