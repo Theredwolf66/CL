@@ -220,7 +220,8 @@ void TypeCheckListener::exitArithmetic(AslParser::ArithmeticContext *ctx) {
   if (((not Types.isErrorTy(t1)) and (not Types.isNumericTy(t1))) or
       ((not Types.isErrorTy(t2)) and (not Types.isNumericTy(t2))))
     Errors.incompatibleOperator(ctx->op);
-  TypesMgr::TypeId t = Types.createIntegerTy();
+  TypesMgr::TypeId t = Types.createFloatTy();
+  if(Types.isIntegerTy(t1) and Types.isIntegerTy(t2)) t = Types.createIntegerTy();
   putTypeDecor(ctx, t);
   putIsLValueDecor(ctx, false);
   DEBUG_EXIT();
@@ -230,33 +231,28 @@ void TypeCheckListener::enterRelational(AslParser::RelationalContext *ctx) {
   DEBUG_ENTER();
 }
 void TypeCheckListener::exitRelational(AslParser::RelationalContext *ctx) {
+    TypesMgr::TypeId t1 = getTypeDecor(ctx->expr(0));
+    TypesMgr::TypeId t = Types.createBooleanTy();
     if (ctx->NOT()) {
-        TypesMgr::TypeId t1 = getTypeDecor(ctx->expr(0));
-        TypesMgr::TypeId t = Types.createBooleanTy();
-        if ((not Types.isErrorTy(t1)) and not Types.isBooleanTy(t1))
+        if ((not Types.isErrorTy(t1)) and (not Types.isBooleanTy(t1)))
             Errors.booleanRequired(ctx);
         putTypeDecor(ctx, t);
         putIsLValueDecor(ctx, false);
         DEBUG_EXIT();
-    } else if (not ctx->EQUAL()) {
-        TypesMgr::TypeId t1 = getTypeDecor(ctx->expr(0));
+    } else if (ctx->AND() or ctx->OR()) {
         TypesMgr::TypeId t2 = getTypeDecor(ctx->expr(1));
-        //std::cout << "t1: " << t1 << " t2: " << t2 << std::endl;
         std::string oper = ctx->op->getText();
-        if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and (not Types.isBooleanTy(t1)) and (not Types.isBooleanTy(t2)))
+        if (((not Types.isErrorTy(t1)) and (not Types.isBooleanTy(t1))) or ((not Types.isErrorTy(t2)) and (not Types.isBooleanTy(t2)))){
             Errors.incompatibleOperator(ctx->op);
-        TypesMgr::TypeId t = Types.createBooleanTy();
+        }
         putTypeDecor(ctx, t);
         putIsLValueDecor(ctx, false);
         DEBUG_EXIT();
     } else {
-        TypesMgr::TypeId t1 = getTypeDecor(ctx->expr(0));
         TypesMgr::TypeId t2 = getTypeDecor(ctx->expr(1));
-        //std::cout << "t1: " << t1 << " t2: " << t2 << std::endl;
         std::string oper = ctx->op->getText();
         if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and (not Types.comparableTypes(t1, t2, oper)))
             Errors.incompatibleOperator(ctx->op);
-        TypesMgr::TypeId t = Types.createBooleanTy();
         putTypeDecor(ctx, t);
         putIsLValueDecor(ctx, false);
         DEBUG_EXIT();

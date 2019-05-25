@@ -99,7 +99,7 @@ expr    : '(' expr ')'                              # parenthesis
         | NOT expr                                  # relational
         | expr op=(MUL|DIV) expr                    # arithmetic
         | expr op=(PLUS|RES) expr                   # arithmetic
-        | expr op=EQUAL expr                  # relational
+        | expr op=(EQUAL|DIF|BT|BE|LE|LT) expr    # relational
         | expr op=(AND|OR) expr               # relational
         | INTVAL                              # value
         | BOOLVAL                              # value
@@ -117,6 +117,11 @@ ident   : ID
 
 ASSIGN    : '=' ;
 EQUAL     : '==' ;
+DIF       : '!=' ;
+BT        : '=>' ;
+BE        : '>' ;
+LE        : '<=' ;
+LT        : '<' ;
 PLUS      : '+' ;
 MUL       : '*';
 RES       : '-';
