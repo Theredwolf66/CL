@@ -38,9 +38,18 @@ program : function+ EOF
 
 // A function has a name, a list of parameters and a list of statements
 function
-        : FUNC ID '(' ')' declarations statements ENDFUNC
+        : FUNC ID '(' parameters ')' (':' type)? declarations statements ENDFUNC
         ;
 
+parameters
+        : (parameter_decl (',' parameter_decl )*)?
+        ;
+        
+parameter_decl
+        : ID (COMA ID)* ':' (type | array_decl)
+        ;
+
+        
 declarations
         : (variable_decl)*
         ;
@@ -80,6 +89,8 @@ statement
         | WRITE expr ';'                      # writeExpr
           // Write a string
         | WRITE STRING ';'                    # writeString
+          // return a function result
+        | RETURN expr ';'                     # returnExpr_
         ;
         
 procedure
@@ -93,7 +104,8 @@ left_expr
         ;        
         
 // Grammar for expressions with boolean, relational and aritmetic operators
-expr    : '(' expr ')'                              # parenthesis
+expr    : procedure                                 # procExpr
+        | '(' expr ')'                              # parenthesis
         | ident '[' INTVAL ']'                        # exprIdent //TODO Propagar correctament el codi, fer que les arrays aqui dins funcionin
         | ident '[' expr ']'                        # exprIdent
         | NOT expr                                  # relational
@@ -143,6 +155,7 @@ FUNC      : 'func' ;
 ENDFUNC   : 'endfunc' ;
 READ      : 'read' ;
 WRITE     : 'write' ;
+RETURN    : 'return' ;
 BOOLVAL   : ('true'|'false');
 
 ID        : ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')* ;

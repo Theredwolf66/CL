@@ -293,6 +293,15 @@ void TypeCheckListener::exitValue(AslParser::ValueContext *ctx) {
   DEBUG_EXIT();
 }
 
+void TypeCheckListener::enterProcExpr(AslParser::ProcExprContext *ctx) {
+    DEBUG_ENTER();
+}
+void TypeCheckListener::exitProcExpr(AslParser::ProcExprContext *ctx) {
+    TypesMgr::TypeId t;
+    
+    DEBUG_EXIT();
+}
+
 void TypeCheckListener::enterExprIdent(AslParser::ExprIdentContext *ctx) {
   DEBUG_ENTER();
 }

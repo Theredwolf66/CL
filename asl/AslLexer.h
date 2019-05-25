@@ -16,8 +16,9 @@ public:
     ASSIGN = 8, EQUAL = 9, PLUS = 10, MUL = 11, RES = 12, DIV = 13, VAR = 14, 
     INT = 15, FLOAT = 16, BOOL = 17, CHAR = 18, ARRAY = 19, NOT = 20, AND = 21, 
     OR = 22, IF = 23, THEN = 24, ELSE = 25, ENDIF = 26, FUNC = 27, ENDFUNC = 28, 
-    READ = 29, WRITE = 30, BOOLVAL = 31, ID = 32, COMA = 33, INTVAL = 34, 
-    FLOATVAL = 35, CHARVAL = 36, STRING = 37, COMMENT = 38, WS = 39
+    READ = 29, WRITE = 30, RETURN = 31, BOOLVAL = 32, ID = 33, COMA = 34, 
+    INTVAL = 35, FLOATVAL = 36, CHARVAL = 37, STRING = 38, COMMENT = 39, 
+    WS = 40
   };
 
   AslLexer(antlr4::CharStream *input);

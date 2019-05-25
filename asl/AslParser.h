@@ -16,14 +16,16 @@ public:
     ASSIGN = 8, EQUAL = 9, PLUS = 10, MUL = 11, RES = 12, DIV = 13, VAR = 14, 
     INT = 15, FLOAT = 16, BOOL = 17, CHAR = 18, ARRAY = 19, NOT = 20, AND = 21, 
     OR = 22, IF = 23, THEN = 24, ELSE = 25, ENDIF = 26, FUNC = 27, ENDFUNC = 28, 
-    READ = 29, WRITE = 30, BOOLVAL = 31, ID = 32, COMA = 33, INTVAL = 34, 
-    FLOATVAL = 35, CHARVAL = 36, STRING = 37, COMMENT = 38, WS = 39
+    READ = 29, WRITE = 30, RETURN = 31, BOOLVAL = 32, ID = 33, COMA = 34, 
+    INTVAL = 35, FLOATVAL = 36, CHARVAL = 37, STRING = 38, COMMENT = 39, 
+    WS = 40
   };
 
   enum {
-    RuleProgram = 0, RuleFunction = 1, RuleDeclarations = 2, RuleVariable_decl = 3, 
-    RuleType = 4, RuleArray_decl = 5, RuleStatements = 6, RuleStatement = 7, 
-    RuleProcedure = 8, RuleLeft_expr = 9, RuleExpr = 10, RuleIdent = 11
+    RuleProgram = 0, RuleFunction = 1, RuleParameters = 2, RuleParameter_decl = 3, 
+    RuleDeclarations = 4, RuleVariable_decl = 5, RuleType = 6, RuleArray_decl = 7, 
+    RuleStatements = 8, RuleStatement = 9, RuleProcedure = 10, RuleLeft_expr = 11, 
+    RuleExpr = 12, RuleIdent = 13
   };
 
   AslParser(antlr4::TokenStream *input);
@@ -38,6 +40,8 @@ public:
 
   class ProgramContext;
   class FunctionContext;
+  class ParametersContext;
+  class Parameter_declContext;
   class DeclarationsContext;
   class Variable_declContext;
   class TypeContext;
@@ -70,9 +74,11 @@ public:
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *FUNC();
     antlr4::tree::TerminalNode *ID();
+    ParametersContext *parameters();
     DeclarationsContext *declarations();
     StatementsContext *statements();
     antlr4::tree::TerminalNode *ENDFUNC();
+    TypeContext *type();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -80,6 +86,38 @@ public:
   };
 
   FunctionContext* function();
+
+  class  ParametersContext : public antlr4::ParserRuleContext {
+  public:
+    ParametersContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    std::vector<Parameter_declContext *> parameter_decl();
+    Parameter_declContext* parameter_decl(size_t i);
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+   
+  };
+
+  ParametersContext* parameters();
+
+  class  Parameter_declContext : public antlr4::ParserRuleContext {
+  public:
+    Parameter_declContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    std::vector<antlr4::tree::TerminalNode *> ID();
+    antlr4::tree::TerminalNode* ID(size_t i);
+    TypeContext *type();
+    Array_declContext *array_decl();
+    std::vector<antlr4::tree::TerminalNode *> COMA();
+    antlr4::tree::TerminalNode* COMA(size_t i);
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+   
+  };
+
+  Parameter_declContext* parameter_decl();
 
   class  DeclarationsContext : public antlr4::ParserRuleContext {
   public:
@@ -214,6 +252,16 @@ public:
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
   };
 
+  class  ReturnExpr_Context : public StatementContext {
+  public:
+    ReturnExpr_Context(StatementContext *ctx);
+
+    antlr4::tree::TerminalNode *RETURN();
+    ExprContext *expr();
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+  };
+
   class  AssignStmtContext : public StatementContext {
   public:
     AssignStmtContext(StatementContext *ctx);
@@ -280,6 +328,15 @@ public:
     virtual size_t getRuleIndex() const override;
 
    
+  };
+
+  class  ProcExprContext : public ExprContext {
+  public:
+    ProcExprContext(ExprContext *ctx);
+
+    ProcedureContext *procedure();
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
   };
 
   class  ExprIdentContext : public ExprContext {
