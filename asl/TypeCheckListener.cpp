@@ -293,12 +293,39 @@ void TypeCheckListener::exitValue(AslParser::ValueContext *ctx) {
   DEBUG_EXIT();
 }
 
+void TypeCheckListener::enterProcedure(AslParser::ProcedureContext *ctx) {
+    DEBUG_ENTER();
+}
+
+void TypeCheckListener::exitProcedure(AslParser::ProcedureContext *ctx) {
+    auto t = getTypeDecor(ctx->ident());
+    if (not Types.isFunctionTy(t)) {
+        Errors.isNotFunction(ctx->ident());
+    }
+    //std::cout << "Size Parameters: " << ctx->expr().size() << std::endl;
+    
+    if (ctx->expr().size() != Types.getNumOfParameters(t)) {
+        Errors.numberOfParameters(ctx->ident());
+    } else {
+        for (unsigned int i = 0; i < ctx->expr().size(); i++) {
+            auto expressionType = getTypeDecor(ctx->expr(i));
+            auto realType = Types.getParameterType(t,i);
+            if (not Types.equalTypes(expressionType, realType)) {
+                Errors.incompatibleParameter(ctx->expr(i), i+1, ctx);
+            }
+        }
+    }
+    
+    putTypeDecor(ctx,Types.getFuncReturnType(t));
+    DEBUG_EXIT();
+}
+
 void TypeCheckListener::enterProcExpr(AslParser::ProcExprContext *ctx) {
     DEBUG_ENTER();
 }
 void TypeCheckListener::exitProcExpr(AslParser::ProcExprContext *ctx) {
-    TypesMgr::TypeId t;
-    
+    TypesMgr::TypeId t = getTypeDecor(ctx->procedure());
+    putTypeDecor(ctx,t);
     DEBUG_EXIT();
 }
 

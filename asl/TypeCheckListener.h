@@ -113,6 +113,9 @@ public:
   void enterProcExpr(AslParser::ProcExprContext *ctx);
   void exitProcExpr(AslParser::ProcExprContext *ctx);
   
+  void enterProcedure(AslParser::ProcedureContext *ctx);
+  void exitProcedure(AslParser::ProcedureContext *ctx);
+  
   void enterExprIdent(AslParser::ExprIdentContext *ctx);
   void exitExprIdent(AslParser::ExprIdentContext *ctx);
 

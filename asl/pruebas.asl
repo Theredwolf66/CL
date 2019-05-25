@@ -1,4 +1,4 @@
-func f(a : int, b : array [5] of int) : bool
+func f(a : int, b : int) : bool
     var x : int
     x = a;
     return x == x;
@@ -11,5 +11,7 @@ func main()
     var x : int
 
     var y : bool
+    y = f(x,x,x);
+    y = f(x,y);
     
 endfunc

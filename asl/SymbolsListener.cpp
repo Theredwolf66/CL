@@ -85,8 +85,22 @@ void SymbolsListener::exitFunction(AslParser::FunctionContext *ctx) {
     Errors.declaredIdent(ctx->ID());
   }
   else {
-    std::vector<TypesMgr::TypeId> lParamsTy;
-    TypesMgr::TypeId tRet = Types.createVoidTy();
+    std::vector<TypesMgr::TypeId> lParamsTy; //TODO inicialitzar correctament el ParamsTy
+    auto paramList = ctx->parameters();
+    for (auto params : paramList->parameter_decl()) {
+        TypesMgr::TypeId parameterType;
+        if (params->type()) parameterType = getTypeDecor(params->type());
+        else if (params->array_decl()) parameterType = getTypeDecor(params->array_decl());
+        for (auto ids : params->ID()) {
+            lParamsTy.push_back(parameterType);
+        }
+    }
+    TypesMgr::TypeId tRet;
+    if (ctx->type()) {
+        tRet = getTypeDecor(ctx->type());
+    } else {
+        tRet = Types.createVoidTy();
+    }
     TypesMgr::TypeId tFunc = Types.createFunctionTy(lParamsTy, tRet);
     Symbols.addFunction(ident, tFunc);
   }
