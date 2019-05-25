@@ -77,6 +77,7 @@ void CodeGenListener::enterFunction(AslParser::FunctionContext *ctx) {
 void CodeGenListener::exitFunction(AslParser::FunctionContext *ctx) {
   subroutine & subrRef = Code.get_last_subroutine();
   instructionList code = getCodeDecor(ctx->statements());
+  //TODO que retorni tot correctament
   code = code || instruction::RETURN();
   subrRef.set_instructions(code);
   Symbols.popScope();
@@ -269,8 +270,9 @@ void CodeGenListener::enterProcCall(AslParser::ProcCallContext *ctx) {
         DEBUG_ENTER();
 }
 void CodeGenListener::exitProcCall(AslParser::ProcCallContext *ctx) {
-        auto code = getCodeDecor(ctx->procedure());
+        auto code = getCodeDecor(ctx->procedure()) || instruction::POP();
         putCodeDecor(ctx, code);
+           
         DEBUG_EXIT();
 }
 
@@ -521,6 +523,53 @@ void CodeGenListener::exitValue(AslParser::ValueContext *ctx) {
   //putOffsetDecor(ctx, "");
   putCodeDecor(ctx, code);
   DEBUG_EXIT();
+}
+
+void CodeGenListener::enterProcedure(AslParser::ProcedureContext *ctx) {
+    DEBUG_ENTER();
+}
+
+void CodeGenListener::exitProcedure(AslParser::ProcedureContext *ctx) {
+    instructionList code = instruction::PUSH();
+    //Espai buit al stack si cal tornar
+    
+    //std::string temp = "%"+codeCounters.newTEMP();
+    
+    
+    //Sumar codi de totes les expresions
+    //declarar parametres
+    for (auto params : ctx->expr()) {
+        std::string     addrTemp = getAddrDecor(params);
+        instructionList codeTemp = getCodeDecor(params);
+        code = code || codeTemp || instruction::PUSH(addrTemp);
+    }
+    //cridar funcio
+    code = code || instruction::CALL(ctx->ident()->ID()->getText());
+    //fer pop a parametres
+    for (auto params : ctx->expr()) {
+        code = code || instruction::POP();
+    }
+    
+    //TODO encolomar el pop final amb el resultat a procCall o procExpr
+    putCodeDecor(ctx, code);
+    
+    DEBUG_EXIT();
+}
+
+void CodeGenListener::enterProcExpr(AslParser::ProcExprContext *ctx) {
+    DEBUG_ENTER();
+}
+
+void CodeGenListener::exitProcExpr(AslParser::ProcExprContext *ctx) {
+    std::string temp = "%"+codeCounters.newTEMP();
+    //std::string     addr1 = getAddrDecor(ctx->procedure());
+    instructionList code1 = getCodeDecor(ctx->procedure());
+    code1 = code1 || instruction::POP(temp);
+    putCodeDecor(ctx,code1); 
+    putAddrDecor(ctx, temp); 
+    putOffsetDecor(ctx, temp);
+    
+    DEBUG_EXIT();
 }
 
 void CodeGenListener::enterExprIdent(AslParser::ExprIdentContext *ctx) {
