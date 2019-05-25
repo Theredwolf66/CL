@@ -1,10 +1,11 @@
 func main()
     var p : array [10] of int
-    var l : array [1] of float
+    var l : array [1] of bool
     var x : int
-    var a,b,c,d : bool
-    b = a and b or c and d;
-    
-   
-    
+
+    var y : bool
+    y = not x;
+    y = not p[1];
+    y = not l[1];
+    y = not y;
 endfunc
