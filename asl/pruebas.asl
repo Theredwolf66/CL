@@ -1,14 +1,10 @@
 func main()
     var p : array [10] of int
-    var l : array [1] of float
+    var l : array [1] of bool
     var x : int
-    p[1] = x;
-    x = p[1+2];
-    x = p[p[1+2] + x + x];
-    p[p[1+2]] = x;
-    x = p[p[1]];
-    p[p[1]] = x;
-    
-   
-    
+    var y : bool
+    y = not x;
+    y = not p[1];
+    y = not l[1];
+    y = not y;
 endfunc
