@@ -382,9 +382,6 @@ void CodeGenListener::exitRelational(AslParser::RelationalContext *ctx) {
         std::string     addr2 = getAddrDecor(ctx->expr(1));
         instructionList code2 = getCodeDecor(ctx->expr(1));
         code  = code1 || code2;
-
-        // TypesMgr::TypeId t2 = getTypeDecor(ctx->expr(1));
-        // TypesMgr::TypeId t  = getTypeDecor(ctx);
         if (ctx->EQUAL()) code = code || instruction::EQ(temp, addr1, addr2);
         else if (ctx->AND()) code = code || instruction::AND(temp, addr1, addr2);
         else /* if (ctx->OR()) */ code = code || instruction::OR(temp, addr1, addr2);
@@ -442,6 +439,7 @@ void CodeGenListener::exitExprIdent(AslParser::ExprIdentContext *ctx) {
       instructionList code  = instruction::LOADX(temp,getAddrDecor(ctx->ident()),ctx->INTVAL()->getText());
       putOffsetDecor(ctx, temp);
       putCodeDecor(ctx, code);
+      putAddrDecor(ctx, temp);
   }
   else if (ctx->expr()){
       instructionList code = getCodeDecor(ctx->expr());
@@ -449,6 +447,7 @@ void CodeGenListener::exitExprIdent(AslParser::ExprIdentContext *ctx) {
       code = code || instruction::LOADX(temp,getAddrDecor(ctx->ident()),getOffsetDecor(ctx->expr()));
       putOffsetDecor(ctx, temp);
       putCodeDecor(ctx, code);
+      putAddrDecor(ctx, temp);
       //TODO Mirar si cal i implementar ficar arrays dins d'arrays. El problema segurament es a que passa el offset incorrecte, i hauria de passar una var temp
       //TODO alternativament comprovar que no hi hagi arrays dins d'arrays, que si no es lia
   }

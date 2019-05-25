@@ -48,9 +48,9 @@
 
 // Constructor
 TypeCheckListener::TypeCheckListener(TypesMgr       & Types,
-				     SymTable       & Symbols,
-				     TreeDecoration & Decorations,
-				     SemErrors      & Errors) :
+                                     SymTable       & Symbols,
+                                     TreeDecoration & Decorations,
+                                     SemErrors      & Errors) :
   Types{Types},
   Symbols {Symbols},
   Decorations{Decorations},
@@ -114,9 +114,14 @@ void TypeCheckListener::enterAssignStmt(AslParser::AssignStmtContext *ctx) {
 }
 void TypeCheckListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
   TypesMgr::TypeId t1 = getTypeDecor(ctx->left_expr());
-  //if (Types.isArrayTy(t1)) t1 = Types.getArrayElemType(t1);
+
   TypesMgr::TypeId t2 = getTypeDecor(ctx->expr());
-  //if (Types.isArrayTy(t2)) t2 = Types.getArrayElemType(t2);
+  if(ctx->ident()) {
+      if(ctx->expr() && !Types.isNumericTy(t2)) Errors.nonIntegerIndexInArrayAccess(ctx->expr());
+      t2 = getTypeDecor(ctx->ident());
+      if(!Types.isArrayTy(t2)) Errors.nonArrayInArrayAccess(ctx->ident());
+      else t2 = Types.getArrayElemType(t2);
+  }
   std::cout << "t1: " << t1 << " t2: " << t2 << std::endl;
   if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and (not Types.copyableTypes(t1, t2)))
     Errors.incompatibleAssignment(ctx->ASSIGN());
@@ -179,19 +184,26 @@ void TypeCheckListener::enterLeft_expr(AslParser::Left_exprContext *ctx) {
   DEBUG_ENTER();
 }
 void TypeCheckListener::exitLeft_expr(AslParser::Left_exprContext *ctx) {
-    
+
     TypesMgr::TypeId t = getTypeDecor(ctx->ident());
-    
+
     if (ctx->INTVAL() or ctx->expr()) {
-        putTypeDecor(ctx, Types.getArrayElemType(t));
+        if(!Types.isArrayTy(t)){
+            putTypeDecor(ctx, t);
+            Errors.nonArrayInArrayAccess(ctx->ident());
+        }
+        else putTypeDecor(ctx, Types.getArrayElemType(t));
         if (ctx->expr()) {
             TypesMgr::TypeId t1 = getTypeDecor(ctx->expr());
-            if (!Types.isNumericTy(t1)) Errors.nonIntegerIndexInArrayAccess(ctx->expr());
+            if (!Types.isNumericTy(t1)) {
+                Errors.nonIntegerIndexInArrayAccess(ctx->expr());
+            }
         }
+
     } else {
         putTypeDecor(ctx, t);
     }
-    
+
     bool b = getIsLValueDecor(ctx->ident());
     putIsLValueDecor(ctx, b);
     DEBUG_EXIT();
@@ -221,7 +233,7 @@ void TypeCheckListener::exitRelational(AslParser::RelationalContext *ctx) {
     if (ctx->NOT()) {
         TypesMgr::TypeId t1 = getTypeDecor(ctx->expr(0));
         TypesMgr::TypeId t = Types.createBooleanTy();
-        if ((not Types.isErrorTy(t1)) and not Types.isBooleanTy(t1)) 
+        if ((not Types.isErrorTy(t1)) and not Types.isBooleanTy(t1))
             Errors.booleanRequired(ctx);
         putTypeDecor(ctx, t);
         putIsLValueDecor(ctx, false);
@@ -258,23 +270,23 @@ void TypeCheckListener::exitValue(AslParser::ValueContext *ctx) {
     TypesMgr::TypeId t;
     if(ctx->INTVAL()){
         t = Types.createIntegerTy();
-        
+
     }
     else if(ctx->FLOATVAL()){
         t = Types.createFloatTy();
-        
+
     }
     else if(ctx->CHARVAL()){
         t = Types.createCharacterTy();
-        
+
     }
     else if(ctx->BOOLVAL()){
         t = Types.createBooleanTy();
-        
+
     }
     else{// Type not recognized
         t = Types.createErrorTy();
-        
+
     }
   putTypeDecor(ctx, t);
   putIsLValueDecor(ctx, false);
@@ -286,19 +298,25 @@ void TypeCheckListener::enterExprIdent(AslParser::ExprIdentContext *ctx) {
 }
 void TypeCheckListener::exitExprIdent(AslParser::ExprIdentContext *ctx) { //REMEMBER: canviar tambe left_expr
     TypesMgr::TypeId t = getTypeDecor(ctx->ident());
-    
+
     if (ctx->INTVAL() or ctx->expr()) {
-        putTypeDecor(ctx, Types.getArrayElemType(t));
+        if(!Types.isArrayTy(t)){
+            putTypeDecor(ctx, t);
+            Errors.nonArrayInArrayAccess(ctx->ident());
+        }
+        else putTypeDecor(ctx, Types.getArrayElemType(t));
         if (ctx->expr()) {
             TypesMgr::TypeId t1 = getTypeDecor(ctx->expr());
+
             if (!Types.isNumericTy(t1)) {
+
                 Errors.nonIntegerIndexInArrayAccess(ctx->expr());
             }
         }
     } else {
         putTypeDecor(ctx, t);
     }
-    
+
     bool b = getIsLValueDecor(ctx->ident());
     putIsLValueDecor(ctx, b);
     DEBUG_EXIT();
@@ -329,8 +347,8 @@ void TypeCheckListener::exitIdent(AslParser::IdentContext *ctx) {
   }
   else {
     TypesMgr::TypeId t1 = Symbols.getType(ident);
-    //std::cout << "Ident: " << ident << std::endl;
-    //std::cout << "Tipus: " << t1 << std::endl;
+    std::cout << "Ident: " << ident << std::endl;
+    std::cout << "Tipus: " << t1 << std::endl;
     putTypeDecor(ctx, t1);
     if (Symbols.isFunctionClass(ident))
       putIsLValueDecor(ctx, false);
