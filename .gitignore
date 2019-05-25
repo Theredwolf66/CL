@@ -1,0 +1,7 @@
+asl/pruebas.asl
+asl/*.o
+asl/*.tokens
+asl/*.interp
+asl/_antlr
+asl/_deps
+asl/asl
