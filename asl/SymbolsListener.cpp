@@ -100,6 +100,30 @@ void SymbolsListener::exitDeclarations(AslParser::DeclarationsContext *ctx) {
   DEBUG_EXIT();
 }
 
+void SymbolsListener::enterParameter_decl(AslParser::Parameter_declContext *ctx) {
+    DEBUG_ENTER();
+}
+
+void SymbolsListener::exitParameter_decl(AslParser::Parameter_declContext *ctx) {
+    for(auto id : ctx->ID()){
+                    std::string ident = id->getText();
+                    if (Symbols.findInCurrentScope(ident)) {
+                            Errors.declaredIdent(id);
+                    }
+                    else {
+                        if (ctx->type()) {
+                            TypesMgr::TypeId t1 = getTypeDecor(ctx->type());
+                            Symbols.addParameter(ident, t1);
+                        } else { //array_decl
+                            TypesMgr::TypeId t1 = getTypeDecor(ctx->array_decl());
+                            Symbols.addParameter(ident, t1);
+                        }
+                        
+                    }
+    }
+    DEBUG_EXIT();
+}
+
 void SymbolsListener::enterVariable_decl(AslParser::Variable_declContext *ctx) {
   DEBUG_ENTER();
 }

@@ -20,6 +20,12 @@ public:
   virtual void enterFunction(AslParser::FunctionContext *ctx) = 0;
   virtual void exitFunction(AslParser::FunctionContext *ctx) = 0;
 
+  virtual void enterParameters(AslParser::ParametersContext *ctx) = 0;
+  virtual void exitParameters(AslParser::ParametersContext *ctx) = 0;
+
+  virtual void enterParameter_decl(AslParser::Parameter_declContext *ctx) = 0;
+  virtual void exitParameter_decl(AslParser::Parameter_declContext *ctx) = 0;
+
   virtual void enterDeclarations(AslParser::DeclarationsContext *ctx) = 0;
   virtual void exitDeclarations(AslParser::DeclarationsContext *ctx) = 0;
 
@@ -53,11 +59,17 @@ public:
   virtual void enterWriteString(AslParser::WriteStringContext *ctx) = 0;
   virtual void exitWriteString(AslParser::WriteStringContext *ctx) = 0;
 
+  virtual void enterReturnExpr_(AslParser::ReturnExpr_Context *ctx) = 0;
+  virtual void exitReturnExpr_(AslParser::ReturnExpr_Context *ctx) = 0;
+
   virtual void enterProcedure(AslParser::ProcedureContext *ctx) = 0;
   virtual void exitProcedure(AslParser::ProcedureContext *ctx) = 0;
 
   virtual void enterLeft_expr(AslParser::Left_exprContext *ctx) = 0;
   virtual void exitLeft_expr(AslParser::Left_exprContext *ctx) = 0;
+
+  virtual void enterProcExpr(AslParser::ProcExprContext *ctx) = 0;
+  virtual void exitProcExpr(AslParser::ProcExprContext *ctx) = 0;
 
   virtual void enterExprIdent(AslParser::ExprIdentContext *ctx) = 0;
   virtual void exitExprIdent(AslParser::ExprIdentContext *ctx) = 0;

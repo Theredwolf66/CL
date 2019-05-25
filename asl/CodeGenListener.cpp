@@ -90,6 +90,20 @@ void CodeGenListener::exitDeclarations(AslParser::DeclarationsContext *ctx) {
   DEBUG_EXIT();
 }
 
+void CodeGenListener::enterParameter_decl(AslParser::Parameter_declContext *ctx) {
+  DEBUG_ENTER();
+}
+void CodeGenListener::exitParameter_decl(AslParser::Parameter_declContext *ctx) {
+  subroutine       & subrRef = Code.get_last_subroutine();
+  TypesMgr::TypeId        t1;
+  if(ctx->type())  t1 = getTypeDecor(ctx->type());
+  else t1 = getTypeDecor(ctx->array_decl());
+  for(auto id : ctx->ID()){
+                  subrRef.add_param(id->getText());
+  }
+  DEBUG_EXIT();
+}
+
 void CodeGenListener::enterVariable_decl(AslParser::Variable_declContext *ctx) {
   DEBUG_ENTER();
 }

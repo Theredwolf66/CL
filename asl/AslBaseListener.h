@@ -22,6 +22,12 @@ public:
   virtual void enterFunction(AslParser::FunctionContext * /*ctx*/) override { }
   virtual void exitFunction(AslParser::FunctionContext * /*ctx*/) override { }
 
+  virtual void enterParameters(AslParser::ParametersContext * /*ctx*/) override { }
+  virtual void exitParameters(AslParser::ParametersContext * /*ctx*/) override { }
+
+  virtual void enterParameter_decl(AslParser::Parameter_declContext * /*ctx*/) override { }
+  virtual void exitParameter_decl(AslParser::Parameter_declContext * /*ctx*/) override { }
+
   virtual void enterDeclarations(AslParser::DeclarationsContext * /*ctx*/) override { }
   virtual void exitDeclarations(AslParser::DeclarationsContext * /*ctx*/) override { }
 
@@ -55,11 +61,17 @@ public:
   virtual void enterWriteString(AslParser::WriteStringContext * /*ctx*/) override { }
   virtual void exitWriteString(AslParser::WriteStringContext * /*ctx*/) override { }
 
+  virtual void enterReturnExpr_(AslParser::ReturnExpr_Context * /*ctx*/) override { }
+  virtual void exitReturnExpr_(AslParser::ReturnExpr_Context * /*ctx*/) override { }
+
   virtual void enterProcedure(AslParser::ProcedureContext * /*ctx*/) override { }
   virtual void exitProcedure(AslParser::ProcedureContext * /*ctx*/) override { }
 
   virtual void enterLeft_expr(AslParser::Left_exprContext * /*ctx*/) override { }
   virtual void exitLeft_expr(AslParser::Left_exprContext * /*ctx*/) override { }
+
+  virtual void enterProcExpr(AslParser::ProcExprContext * /*ctx*/) override { }
+  virtual void exitProcExpr(AslParser::ProcExprContext * /*ctx*/) override { }
 
   virtual void enterExprIdent(AslParser::ExprIdentContext * /*ctx*/) override { }
   virtual void exitExprIdent(AslParser::ExprIdentContext * /*ctx*/) override { }
