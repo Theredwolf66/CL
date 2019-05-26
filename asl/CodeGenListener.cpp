@@ -272,10 +272,12 @@ void CodeGenListener::enterProcCall(AslParser::ProcCallContext *ctx) {
         DEBUG_ENTER();
 }
 void CodeGenListener::exitProcCall(AslParser::ProcCallContext *ctx) {
-        auto code = getCodeDecor(ctx->procedure()) || instruction::POP();
-        putCodeDecor(ctx, code);
-           
-        DEBUG_EXIT();
+    auto functionType = getTypeDecor(ctx->procedure()->ident());
+    instructionList code = getCodeDecor(ctx->procedure());
+    if (not Types.isVoidFunction(functionType)) code = instruction::PUSH() || code || instruction::POP();
+    putCodeDecor(ctx, code);
+        
+    DEBUG_EXIT();
 }
 
 void CodeGenListener::enterReadStmt(AslParser::ReadStmtContext *ctx) {
@@ -410,7 +412,7 @@ void CodeGenListener::exitArithmetic(AslParser::ArithmeticContext *ctx) {
 
   std::string temp = "%"+codeCounters.newTEMP();
 
-  std::cout << "Construint variable temp: " << temp << std::endl;
+  //std::cout << "Construint variable temp: " << temp << std::endl;
   if(Types.isFloatTy(t1) or Types.isFloatTy(t2)){
       if(Types.isIntegerTy(t1)) {
           std::string tmp = "%"+codeCounters.newTEMP();
@@ -529,7 +531,7 @@ void CodeGenListener::exitValue(AslParser::ValueContext *ctx) {
   if (ctx->INTVAL()){
     code = instruction::ILOAD(temp, text);
     putOffsetDecor(ctx, text);
-    std::cout << "Text Int: " << text << std::endl;
+    //std::cout << "Text Int: " << text << std::endl;
   }
   if (ctx->FLOATVAL()){
     code = instruction::FLOAD(temp, text);
@@ -560,13 +562,14 @@ void CodeGenListener::enterProcedure(AslParser::ProcedureContext *ctx) {
 }
 
 void CodeGenListener::exitProcedure(AslParser::ProcedureContext *ctx) {
-    instructionList code = instruction::PUSH();
-    //Espai buit al stack si cal tornar
+    
+    //Faig el push inicial al proccall i procexpr
     
     //std::string temp = "%"+codeCounters.newTEMP();
     
     auto functionNode = ctx->ident();
     auto functionType = getTypeDecor(functionNode);
+    instructionList code;
     int currentParameter = 0;
     //Sumar codi de totes les expresions
     //declarar parametres
@@ -598,7 +601,6 @@ void CodeGenListener::exitProcedure(AslParser::ProcedureContext *ctx) {
         code = code || instruction::POP();
     }
     
-    //TODO encolomar el pop final amb el resultat a procCall o procExpr
     putCodeDecor(ctx, code);
     
     DEBUG_EXIT();
@@ -609,10 +611,13 @@ void CodeGenListener::enterProcExpr(AslParser::ProcExprContext *ctx) {
 }
 
 void CodeGenListener::exitProcExpr(AslParser::ProcExprContext *ctx) {
+    instructionList code1 = getCodeDecor(ctx->procedure());
+    
     std::string temp = "%"+codeCounters.newTEMP();
     //std::string     addr1 = getAddrDecor(ctx->procedure());
-    instructionList code1 = getCodeDecor(ctx->procedure());
-    code1 = code1 || instruction::POP(temp);
+    
+    code1 = instruction::PUSH() || code1 || instruction::POP(temp);
+    
     putCodeDecor(ctx,code1); 
     putAddrDecor(ctx, temp); 
     putOffsetDecor(ctx, temp);

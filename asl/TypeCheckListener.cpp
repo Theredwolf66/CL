@@ -124,7 +124,7 @@ void TypeCheckListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
       if(!Types.isArrayTy(t2)) Errors.nonArrayInArrayAccess(ctx->ident());
       else t2 = Types.getArrayElemType(t2);
   }
-  std::cout << "t1: " << t1 << " t2: " << t2 << std::endl;
+  //std::cout << "t1: " << t1 << " t2: " << t2 << std::endl;
   if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and (not Types.copyableTypes(t1, t2)))
     Errors.incompatibleAssignment(ctx->ASSIGN());
   if ((not Types.isErrorTy(t1)) and (not getIsLValueDecor(ctx->left_expr())))
@@ -317,9 +317,8 @@ void TypeCheckListener::exitProcedure(AslParser::ProcedureContext *ctx) {
     auto t = getTypeDecor(ctx->ident());
     if (not Types.isFunctionTy(t)) {
         Errors.isNotFunction(ctx->ident());
-    }
-    //std::cout << "Size Parameters: " << ctx->expr().size() << std::endl;
-    
+        putTypeDecor(ctx,Types.createErrorTy());
+    } else  if (Types.isFunctionTy(t)) {
         if (ctx->expr().size() != Types.getNumOfParameters(t)) {
             Errors.numberOfParameters(ctx->ident());
         } else {
@@ -331,9 +330,10 @@ void TypeCheckListener::exitProcedure(AslParser::ProcedureContext *ctx) {
                 }
             }
         }
+        putTypeDecor(ctx,Types.getFuncReturnType(t));
+    }
     
     
-    putTypeDecor(ctx,Types.getFuncReturnType(t));
     DEBUG_EXIT();
 }
 
@@ -400,8 +400,8 @@ void TypeCheckListener::exitIdent(AslParser::IdentContext *ctx) {
   }
   else {
     TypesMgr::TypeId t1 = Symbols.getType(ident);
-    std::cout << "Ident: " << ident << std::endl;
-    std::cout << "Tipus: " << t1 << std::endl;
+    //std::cout << "Ident: " << ident << std::endl;
+    //std::cout << "Tipus: " << t1 << std::endl;
     putTypeDecor(ctx, t1);
     if (Symbols.isFunctionClass(ident))
       putIsLValueDecor(ctx, false);
