@@ -11,7 +11,8 @@ func main()
     var x,z : float
     var y : bool
     x = f(x,p);
-    write "abv\n";
-    write "\n";
+    while y do
+        y = true;
+    endwhile
     
 endfunc

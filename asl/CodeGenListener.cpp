@@ -260,14 +260,43 @@ void CodeGenListener::exitIfStmt(AslParser::IfStmtContext *ctx) {
   instructionList   code;
   std::string      addr1 = getAddrDecor(ctx->expr());
   instructionList  code1 = getCodeDecor(ctx->expr());
-  instructionList  code2 = getCodeDecor(ctx->statements());
+  instructionList  code2 = getCodeDecor(ctx->statements(0));
   std::string      label = codeCounters.newLabelIF();
   std::string labelEndIf = "endif"+label;
-  code = code1 || instruction::FJUMP(addr1, labelEndIf) ||
+  if(ctx->ELSE()){
+      std::string labelElse = "else"+label;
+      instructionList code3 = getCodeDecor(ctx->statements(1));
+      code = code1 || instruction::FJUMP(addr1, labelElse) ||
+         code2 || instruction::UJUMP(labelEndIf) ||
+         instruction::LABEL(labelElse) || code3 || instruction::LABEL(labelEndIf);
+  }
+  else{
+      code = code1 || instruction::FJUMP(addr1, labelEndIf) ||
          code2 || instruction::LABEL(labelEndIf);
+  }
   putCodeDecor(ctx, code);
   DEBUG_EXIT();
 }
+
+void CodeGenListener::enterWhileStmt(AslParser::WhileStmtContext *ctx){
+    DEBUG_ENTER();
+}
+void CodeGenListener::exitWhileStmt(AslParser::WhileStmtContext *ctx){
+    instructionList   code;
+    std::string      addr1 = getAddrDecor(ctx->expr());
+    instructionList  code1 = getCodeDecor(ctx->expr());
+    instructionList  code2 = getCodeDecor(ctx->statements());
+    std::string      label = codeCounters.newLabelWHILE();
+    std::string labelWhile = "while"+label;
+    std::string labelEndwhile = "endwhile"+label;
+    code = code1 || instruction::LABEL(labelWhile)||
+            instruction::FJUMP(addr1, labelEndwhile) ||code2 ||
+            instruction::UJUMP(labelWhile) ||instruction::LABEL(labelEndwhile);
+
+    putCodeDecor(ctx, code);
+    DEBUG_EXIT();
+}
+
 
 void CodeGenListener::enterProcCall(AslParser::ProcCallContext *ctx) {
         DEBUG_ENTER();
@@ -432,7 +461,7 @@ void CodeGenListener::exitArithmetic(AslParser::ArithmeticContext *ctx) {
       else  if (ctx->RES())
           code = code || instruction::SUB(temp, addr1, addr2);
       else // (ctx->PLUS())
-        code = code || instruction::ADD(temp, addr1, addr2);
+          code = code || instruction::ADD(temp, addr1, addr2);
   }
   putAddrDecor(ctx, temp);
   putOffsetDecor(ctx, temp);
