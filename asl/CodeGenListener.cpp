@@ -79,8 +79,7 @@ void CodeGenListener::enterFunction(AslParser::FunctionContext *ctx) {
 void CodeGenListener::exitFunction(AslParser::FunctionContext *ctx) {
   subroutine & subrRef = Code.get_last_subroutine();
   instructionList code = getCodeDecor(ctx->statements());
-  //TODO que retorni tot correctament
-  code = code || instruction::RETURN();
+  if (code[code.size()-1].oper != instruction::RETURN().oper) code = code || instruction::RETURN();
   subrRef.set_instructions(code);
   Symbols.popScope();
   DEBUG_EXIT();
@@ -321,7 +320,15 @@ void CodeGenListener::exitReturnExpr_(AslParser::ReturnExpr_Context *ctx) {
     if (ctx->expr()) {
         std::string     addr1 = getAddrDecor(ctx->expr());
         instructionList code1 = getCodeDecor(ctx->expr());
-        code = code1 || instruction::LOAD("_result",addr1);
+        
+        TypesMgr::TypeId t1 = getTypeDecor(ctx->expr());
+        TypesMgr::TypeId t2 = Types.getFuncReturnType(Symbols.getCurrentFunctionTy()); 
+        if ((Types.isIntegerTy(t1)) and (Types.isFloatTy(t2))) {
+            std::string temp = "%"+codeCounters.newTEMP();
+            code = code1 || instruction::FLOAT(temp, addr1) || instruction::LOAD("_result",addr1);            
+        } else {
+            code = code1 || instruction::LOAD("_result",addr1);
+        }
     }
     code = code || instruction::RETURN();
     putCodeDecor(ctx, code);
@@ -558,7 +565,9 @@ void CodeGenListener::exitProcedure(AslParser::ProcedureContext *ctx) {
     
     //std::string temp = "%"+codeCounters.newTEMP();
     
-    
+    auto functionNode = ctx->ident();
+    auto functionType = getTypeDecor(functionNode);
+    int currentParameter = 0;
     //Sumar codi de totes les expresions
     //declarar parametres
     for (auto params : ctx->expr()) {
@@ -566,15 +575,24 @@ void CodeGenListener::exitProcedure(AslParser::ProcedureContext *ctx) {
         instructionList codeTemp = getCodeDecor(params);
         //passar arrays per punter
         auto t = getTypeDecor(params);
+        
         if (Types.isArrayTy(t)) {
             std::string temp = "%"+codeCounters.newTEMP();
             codeTemp = codeTemp || instruction::ALOAD(temp, addrTemp);
             addrTemp = temp;
         }
+        //mirar si cal castejar un int a un float
+        auto t2 = Types.getParameterType(functionType,currentParameter);
+        if (Types.isIntegerTy(t) and Types.isFloatTy(t2)) {
+            std::string temp = "%"+codeCounters.newTEMP();
+            codeTemp = codeTemp || instruction::FLOAT(temp, addrTemp);
+            addrTemp = temp;
+        }
         code = code || codeTemp || instruction::PUSH(addrTemp);
+        currentParameter++;
     }
     //cridar funcio
-    code = code || instruction::CALL(ctx->ident()->ID()->getText());
+    code = code || instruction::CALL(functionNode->ID()->getText());
     //fer pop a parametres
     for (auto params : ctx->expr()) {
         code = code || instruction::POP();

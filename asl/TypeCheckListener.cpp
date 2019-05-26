@@ -185,10 +185,10 @@ void TypeCheckListener::exitReturnExpr_(AslParser::ReturnExpr_Context *ctx) {
         if (ctx->expr()) Errors.incompatibleReturn(ctx);
     } else {
         TypesMgr::TypeId t1 = getTypeDecor(ctx->expr());
-        TypesMgr::TypeId t2 = Types.getFuncReturnType(tf);
-        if (not Types.equalTypes(t1,t2)) {
+        TypesMgr::TypeId t2 = Types.getFuncReturnType(tf); 
+        if (not ((Types.isIntegerTy(t1)) and (Types.isFloatTy(t2))) and not Types.equalTypes(t1,t2))
             Errors.incompatibleReturn(ctx); //Docu antiquada, s'ha de tornar el node principal
-        }
+        
     }
     DEBUG_EXIT();
 }
@@ -326,24 +326,11 @@ void TypeCheckListener::exitProcedure(AslParser::ProcedureContext *ctx) {
             for (unsigned int i = 0; i < ctx->expr().size(); i++) {
                 auto expressionType = getTypeDecor(ctx->expr(i));
                 auto realType = Types.getParameterType(t,i);
-                if (not Types.equalTypes(expressionType, realType)) {
+                if (not Types.equalTypes(expressionType, realType) and not (Types.isIntegerTy(expressionType)) and (Types.isFloatTy(realType))) {
                     Errors.incompatibleParameter(ctx->expr(i), i+1, ctx);
                 }
             }
         }
-     /*else {
-        if (ctx->expr().size()+1 != Types.getNumOfParameters(t)) {
-            Errors.numberOfParameters(ctx->ident());
-        } else {
-            for (unsigned int i = 0; i < ctx->expr().size(); i++) {
-                auto expressionType = getTypeDecor(ctx->expr(i));
-                auto realType = Types.getParameterType(t,i+1);
-                if (not Types.equalTypes(expressionType, realType)) {
-                    Errors.incompatibleParameter(ctx->expr(i), i+1, ctx);
-                }
-            }
-        }
-    }*/
     
     
     putTypeDecor(ctx,Types.getFuncReturnType(t));
