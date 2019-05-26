@@ -9,8 +9,9 @@ func main()
     var p : array [10] of int
     var l : array [1] of bool
     var x,z : int
+    var o : float
 
     var y : bool
-    x = f(x,p);
+    x = f(o,p);
     
 endfunc
