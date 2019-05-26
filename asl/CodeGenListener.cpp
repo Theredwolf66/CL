@@ -192,7 +192,7 @@ void CodeGenListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
                 if (ctx->INTVAL()) {
                     offs2 = ctx->INTVAL()->getText();
                 }
-                std::cout <<"VEamos " << Types.isIntegerTy(t2) << " " << Types.isFloatTy(t1) << std::endl;
+
                 if(Types.isIntegerTy(t2) and Types.isFloatTy(t1)) {
                     auto temp = "%" + codeCounters.newTEMP();
                     code = code || instruction::LOADX(temp, addr2,offs2);
@@ -287,8 +287,10 @@ void CodeGenListener::exitReadStmt(AslParser::ReadStmtContext *ctx) {
   std::string     addr1 = getAddrDecor(ctx->left_expr());
   // std::string     offs1 = getOffsetDecor(ctx->left_expr());
   instructionList code1 = getCodeDecor(ctx->left_expr());
-  // TypesMgr::TypeId tid1 = getTypeDecor(ctx->left_expr());
-  code = code1 || instruction::READI(addr1);
+  TypesMgr::TypeId tid1 = getTypeDecor(ctx->left_expr());
+  if(Types.isFloatTy(tid1)) code = code1 || instruction::READF(addr1);
+  else if(Types.isCharacterTy(tid1)) code = code1 || instruction::READC(addr1);
+  else code = code1 || instruction::READI(addr1);
   putCodeDecor(ctx, code);
   DEBUG_EXIT();
 }
@@ -302,8 +304,10 @@ void CodeGenListener::exitWriteExpr(AslParser::WriteExprContext *ctx) {
   std::string     addr1 = getAddrDecor(ctx->expr());
   // std::string     offs1 = getOffsetDecor(ctx->expr());
   instructionList code1 = getCodeDecor(ctx->expr());
-  // TypesMgr::TypeId tid1 = getTypeDecor(ctx->expr());
-  code = code1 || instruction::WRITEI(addr1);
+  TypesMgr::TypeId tid1 = getTypeDecor(ctx->expr());
+  if(Types.isFloatTy(tid1)) code = code1 || instruction::WRITEF(addr1);
+  else if(Types.isCharacterTy(tid1)) code = code1 || instruction::WRITEC(addr1);
+  else code = code1 || instruction::WRITEI(addr1);
   putCodeDecor(ctx, code);
   DEBUG_EXIT();
 }
