@@ -124,7 +124,7 @@ void TypeCheckListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
       if(!Types.isArrayTy(t2)) Errors.nonArrayInArrayAccess(ctx->ident());
       else t2 = Types.getArrayElemType(t2);
   }
-  std::cout << "t1: " << t1 << " t2: " << t2 << std::endl;
+  //std::cout << "t1: " << t1 << " t2: " << t2 << std::endl;
   if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and (not Types.copyableTypes(t1, t2)))
     Errors.incompatibleAssignment(ctx->ASSIGN());
   if ((not Types.isErrorTy(t1)) and (not getIsLValueDecor(ctx->left_expr())))
@@ -196,10 +196,10 @@ void TypeCheckListener::exitReturnExpr_(AslParser::ReturnExpr_Context *ctx) {
         if (ctx->expr()) Errors.incompatibleReturn(ctx);
     } else {
         TypesMgr::TypeId t1 = getTypeDecor(ctx->expr());
-        TypesMgr::TypeId t2 = Types.getFuncReturnType(tf);
-        if (not Types.equalTypes(t1,t2)) {
+        TypesMgr::TypeId t2 = Types.getFuncReturnType(tf); 
+        if (not ((Types.isIntegerTy(t1)) and (Types.isFloatTy(t2))) and not Types.equalTypes(t1,t2))
             Errors.incompatibleReturn(ctx); //Docu antiquada, s'ha de tornar el node principal
-        }
+        
     }
     DEBUG_EXIT();
 }
@@ -328,36 +328,23 @@ void TypeCheckListener::exitProcedure(AslParser::ProcedureContext *ctx) {
     auto t = getTypeDecor(ctx->ident());
     if (not Types.isFunctionTy(t)) {
         Errors.isNotFunction(ctx->ident());
-    }
-    //std::cout << "Size Parameters: " << ctx->expr().size() << std::endl;
-    
+        putTypeDecor(ctx,Types.createErrorTy());
+    } else  if (Types.isFunctionTy(t)) {
         if (ctx->expr().size() != Types.getNumOfParameters(t)) {
             Errors.numberOfParameters(ctx->ident());
         } else {
             for (unsigned int i = 0; i < ctx->expr().size(); i++) {
                 auto expressionType = getTypeDecor(ctx->expr(i));
                 auto realType = Types.getParameterType(t,i);
-                if (not Types.equalTypes(expressionType, realType)) {
+                if (not Types.equalTypes(expressionType, realType) and not (Types.isIntegerTy(expressionType)) and (Types.isFloatTy(realType))) {
                     Errors.incompatibleParameter(ctx->expr(i), i+1, ctx);
                 }
             }
         }
-     /*else {
-        if (ctx->expr().size()+1 != Types.getNumOfParameters(t)) {
-            Errors.numberOfParameters(ctx->ident());
-        } else {
-            for (unsigned int i = 0; i < ctx->expr().size(); i++) {
-                auto expressionType = getTypeDecor(ctx->expr(i));
-                auto realType = Types.getParameterType(t,i+1);
-                if (not Types.equalTypes(expressionType, realType)) {
-                    Errors.incompatibleParameter(ctx->expr(i), i+1, ctx);
-                }
-            }
-        }
-    }*/
+        putTypeDecor(ctx,Types.getFuncReturnType(t));
+    }
     
     
-    putTypeDecor(ctx,Types.getFuncReturnType(t));
     DEBUG_EXIT();
 }
 
@@ -424,8 +411,8 @@ void TypeCheckListener::exitIdent(AslParser::IdentContext *ctx) {
   }
   else {
     TypesMgr::TypeId t1 = Symbols.getType(ident);
-    std::cout << "Ident: " << ident << std::endl;
-    std::cout << "Tipus: " << t1 << std::endl;
+    //std::cout << "Ident: " << ident << std::endl;
+    //std::cout << "Tipus: " << t1 << std::endl;
     putTypeDecor(ctx, t1);
     if (Symbols.isFunctionClass(ident))
       putIsLValueDecor(ctx, false);
