@@ -74,8 +74,10 @@ void TypeCheckListener::enterFunction(AslParser::FunctionContext *ctx) {
   DEBUG_ENTER();
   SymTable::ScopeId sc = getScopeDecor(ctx);
   Symbols.pushThisScope(sc);
+  //setCurrentFunctionTy no existeix, es fa automaticament, la docu esta antiquada
   // Symbols.print();
 }
+
 void TypeCheckListener::exitFunction(AslParser::FunctionContext *ctx) {
   Symbols.popScope();
   DEBUG_EXIT();
@@ -171,6 +173,24 @@ void TypeCheckListener::exitWriteExpr(AslParser::WriteExprContext *ctx) {
   if ((not Types.isErrorTy(t1)) and (not Types.isPrimitiveTy(t1)))
     Errors.readWriteRequireBasic(ctx);
   DEBUG_EXIT();
+}
+
+void TypeCheckListener::enterReturnExpr_(AslParser::ReturnExpr_Context *ctx) {
+    DEBUG_ENTER();
+}
+
+void TypeCheckListener::exitReturnExpr_(AslParser::ReturnExpr_Context *ctx) {
+    auto tf = Symbols.getCurrentFunctionTy();
+    if (Types.isVoidFunction(tf)) {
+        if (ctx->expr()) Errors.incompatibleReturn(ctx);
+    } else {
+        TypesMgr::TypeId t1 = getTypeDecor(ctx->expr());
+        TypesMgr::TypeId t2 = Types.getFuncReturnType(tf);
+        if (not Types.equalTypes(t1,t2)) {
+            Errors.incompatibleReturn(ctx); //Docu antiquada, s'ha de tornar el node principal
+        }
+    }
+    DEBUG_EXIT();
 }
 
 void TypeCheckListener::enterWriteString(AslParser::WriteStringContext *ctx) {
@@ -300,17 +320,31 @@ void TypeCheckListener::exitProcedure(AslParser::ProcedureContext *ctx) {
     }
     //std::cout << "Size Parameters: " << ctx->expr().size() << std::endl;
     
-    if (ctx->expr().size() != Types.getNumOfParameters(t)) {
-        Errors.numberOfParameters(ctx->ident());
-    } else {
-        for (unsigned int i = 0; i < ctx->expr().size(); i++) {
-            auto expressionType = getTypeDecor(ctx->expr(i));
-            auto realType = Types.getParameterType(t,i);
-            if (not Types.equalTypes(expressionType, realType)) {
-                Errors.incompatibleParameter(ctx->expr(i), i+1, ctx);
+        if (ctx->expr().size() != Types.getNumOfParameters(t)) {
+            Errors.numberOfParameters(ctx->ident());
+        } else {
+            for (unsigned int i = 0; i < ctx->expr().size(); i++) {
+                auto expressionType = getTypeDecor(ctx->expr(i));
+                auto realType = Types.getParameterType(t,i);
+                if (not Types.equalTypes(expressionType, realType)) {
+                    Errors.incompatibleParameter(ctx->expr(i), i+1, ctx);
+                }
             }
         }
-    }
+     /*else {
+        if (ctx->expr().size()+1 != Types.getNumOfParameters(t)) {
+            Errors.numberOfParameters(ctx->ident());
+        } else {
+            for (unsigned int i = 0; i < ctx->expr().size(); i++) {
+                auto expressionType = getTypeDecor(ctx->expr(i));
+                auto realType = Types.getParameterType(t,i+1);
+                if (not Types.equalTypes(expressionType, realType)) {
+                    Errors.incompatibleParameter(ctx->expr(i), i+1, ctx);
+                }
+            }
+        }
+    }*/
+    
     
     putTypeDecor(ctx,Types.getFuncReturnType(t));
     DEBUG_EXIT();

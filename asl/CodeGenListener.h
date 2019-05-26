@@ -100,6 +100,9 @@ public:
 
   void enterWriteString(AslParser::WriteStringContext *ctx);
   void exitWriteString(AslParser::WriteStringContext *ctx);
+  
+  void enterReturnExpr_(AslParser::ReturnExpr_Context *ctx);
+  void exitReturnExpr_(AslParser::ReturnExpr_Context *ctx);
 
   void enterLeft_expr(AslParser::Left_exprContext *ctx);
   void exitLeft_expr(AslParser::Left_exprContext *ctx);

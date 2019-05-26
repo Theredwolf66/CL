@@ -1,7 +1,7 @@
-func f(a : int, b : int) : bool
+func f(a : int, b : array [10] of int) : int
     var x : int
     x = a;
-    return x == x;
+    return 5+8;
 endfunc
 
 
@@ -11,7 +11,6 @@ func main()
     var x,z : int
 
     var y : bool
-    y = f(x,5+8);
-    f(3+4,2+1-5);
+    x = f(x,p);
     
 endfunc

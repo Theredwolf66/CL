@@ -73,6 +73,8 @@ void CodeGenListener::enterFunction(AslParser::FunctionContext *ctx) {
   SymTable::ScopeId sc = getScopeDecor(ctx);
   Symbols.pushThisScope(sc);
   codeCounters.reset();
+  subroutine & subrRef = Code.get_last_subroutine();
+  if (not Types.isVoidFunction(Symbols.getCurrentFunctionTy())) subrRef.add_param("_result");
 }
 void CodeGenListener::exitFunction(AslParser::FunctionContext *ctx) {
   subroutine & subrRef = Code.get_last_subroutine();
@@ -99,6 +101,7 @@ void CodeGenListener::exitParameter_decl(AslParser::Parameter_declContext *ctx) 
   TypesMgr::TypeId        t1;
   if(ctx->type())  t1 = getTypeDecor(ctx->type());
   else t1 = getTypeDecor(ctx->array_decl());
+  
   for(auto id : ctx->ID()){
                   subrRef.add_param(id->getText());
   }
@@ -305,8 +308,24 @@ void CodeGenListener::exitWriteExpr(AslParser::WriteExprContext *ctx) {
   DEBUG_EXIT();
 }
 
+void CodeGenListener::enterReturnExpr_(AslParser::ReturnExpr_Context *ctx) {
+    DEBUG_ENTER();
+}
+
+void CodeGenListener::exitReturnExpr_(AslParser::ReturnExpr_Context *ctx) {
+    instructionList code;
+    if (ctx->expr()) {
+        std::string     addr1 = getAddrDecor(ctx->expr());
+        instructionList code1 = getCodeDecor(ctx->expr());
+        code = code1 || instruction::LOAD("_result",addr1);
+    }
+    code = code || instruction::RETURN();
+    putCodeDecor(ctx, code);
+    DEBUG_EXIT();
+}
+
 void CodeGenListener::enterWriteString(AslParser::WriteStringContext *ctx) {
-  DEBUG_ENTER();
+    DEBUG_ENTER();
 }
 void CodeGenListener::exitWriteString(AslParser::WriteStringContext *ctx) {
   instructionList code;
@@ -541,6 +560,13 @@ void CodeGenListener::exitProcedure(AslParser::ProcedureContext *ctx) {
     for (auto params : ctx->expr()) {
         std::string     addrTemp = getAddrDecor(params);
         instructionList codeTemp = getCodeDecor(params);
+        //passar arrays per punter
+        auto t = getTypeDecor(params);
+        if (Types.isArrayTy(t)) {
+            std::string temp = "%"+codeCounters.newTEMP();
+            codeTemp = codeTemp || instruction::ALOAD(temp, addrTemp);
+            addrTemp = temp;
+        }
         code = code || codeTemp || instruction::PUSH(addrTemp);
     }
     //cridar funcio

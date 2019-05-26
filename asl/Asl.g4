@@ -90,7 +90,7 @@ statement
           // Write a string
         | WRITE STRING ';'                    # writeString
           // return a function result
-        | RETURN expr ';'                     # returnExpr_
+        | RETURN (expr)? ';'                     # returnExpr_
         ;
         
 procedure

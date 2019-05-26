@@ -76,16 +76,44 @@ void SymbolsListener::enterFunction(AslParser::FunctionContext *ctx) {
   std::string funcName = ctx->ID()->getText();
   SymTable::ScopeId sc = Symbols.pushNewScope(funcName);
   putScopeDecor(ctx, sc);
+  /*if (ctx->type()) {
+      
+    TypesMgr::TypeId t; //Els types encara no estan inicialitzats, per tant per a inicialitzar
+                        //els parametres en l'ordre correcte mirem quin tipus basic es aqui
+    if (ctx->type()->INT()) {
+        t = Types.createIntegerTy();
+    }
+    else if (ctx->type()->FLOAT()) {
+        t = Types.createFloatTy();
+    }
+    else if (ctx->type()->BOOL()) {
+        t = Types.createBooleanTy();
+    }
+    else if (ctx->type()->CHAR()) {
+        t = Types.createCharacterTy();
+    }
+    Symbols.addParameter("_result", t);
+  }*/
 }
 void SymbolsListener::exitFunction(AslParser::FunctionContext *ctx) {
-  // Symbols.print();
+// Symbols.print();   
   Symbols.popScope();
   std::string ident = ctx->ID()->getText();
   if (Symbols.findInCurrentScope(ident)) {
     Errors.declaredIdent(ctx->ID());
   }
   else {
-    std::vector<TypesMgr::TypeId> lParamsTy; //TODO inicialitzar correctament el ParamsTy
+    TypesMgr::TypeId tRet;
+    std::vector<TypesMgr::TypeId> lParamsTy;
+    
+    if (ctx->type()) {
+        tRet = getTypeDecor(ctx->type());
+        
+        Symbols.addParameter("_result", tRet);
+    } else {
+        tRet = Types.createVoidTy();
+    }
+
     auto paramList = ctx->parameters();
     for (auto params : paramList->parameter_decl()) {
         TypesMgr::TypeId parameterType;
@@ -95,12 +123,7 @@ void SymbolsListener::exitFunction(AslParser::FunctionContext *ctx) {
             lParamsTy.push_back(parameterType);
         }
     }
-    TypesMgr::TypeId tRet;
-    if (ctx->type()) {
-        tRet = getTypeDecor(ctx->type());
-    } else {
-        tRet = Types.createVoidTy();
-    }
+    
     TypesMgr::TypeId tFunc = Types.createFunctionTy(lParamsTy, tRet);
     Symbols.addFunction(ident, tFunc);
   }
