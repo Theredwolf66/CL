@@ -79,7 +79,17 @@ void CodeGenListener::enterFunction(AslParser::FunctionContext *ctx) {
 void CodeGenListener::exitFunction(AslParser::FunctionContext *ctx) {
   subroutine & subrRef = Code.get_last_subroutine();
   instructionList code = getCodeDecor(ctx->statements());
-  if (code[code.size()-1].oper != instruction::RETURN().oper) code = code || instruction::RETURN();
+  if (not Types.isVoidFunction(Symbols.getCurrentFunctionTy())) {
+    code = getCodeDecor(ctx->statements());
+  //std::cout << (code.size()-1) << std::endl;
+    if ((code.size()-1) >= 0) {
+        if (code[code.size()-1].oper != instruction::RETURN().oper) code = code || instruction::RETURN();
+    }
+  }
+  if (code.size() == 0) code = code || instruction::RETURN();
+  else if (code.size() > 0) {
+      if (code[code.size()-1].oper != instruction::RETURN().oper) code = code || instruction::RETURN();
+  }
   subrRef.set_instructions(code);
   Symbols.popScope();
   DEBUG_EXIT();
