@@ -85,7 +85,6 @@ void SymbolsListener::exitFunction(AslParser::FunctionContext *ctx) {
   //std::cout << "statements sizes: " << ctx->statements()->statement().size() << "  name: " << ident << std::endl;
   //std::cout << emptyMainOverride << std::endl;
   //if (not emptyMainOverride) Symbols.popScope();
-  Symbols.popScope();
   
   if (Symbols.findInCurrentScope(ident)) {
     Errors.declaredIdent(ctx->ID());
@@ -99,6 +98,8 @@ void SymbolsListener::exitFunction(AslParser::FunctionContext *ctx) {
     } else {
         tRet = Types.createVoidTy();
     }
+    //std::cout << "Pushing " << ident << " de tret " << tRet << std::endl;
+    
     auto paramList = ctx->parameters();
     for (auto params : paramList->parameter_decl()) {
         TypesMgr::TypeId parameterType;
@@ -108,10 +109,10 @@ void SymbolsListener::exitFunction(AslParser::FunctionContext *ctx) {
             lParamsTy.push_back(parameterType);
         }
     }
-    
-    
+    Symbols.popScope();
     TypesMgr::TypeId tFunc = Types.createFunctionTy(lParamsTy, tRet);
-    Symbols.addFunction(ident, tFunc);
+    if (not Symbols.findInCurrentScope(ident)) Symbols.addFunction(ident, tFunc);
+    else Errors.declaredIdent(ctx->ID());
     /*if (emptyMainOverride) {
         
         std::vector<TypesMgr::TypeId> lParamsTyy;

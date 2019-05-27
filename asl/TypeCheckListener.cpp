@@ -59,6 +59,7 @@ TypeCheckListener::TypeCheckListener(TypesMgr       & Types,
 
 void TypeCheckListener::enterProgram(AslParser::ProgramContext *ctx) {
   DEBUG_ENTER();
+  
   SymTable::ScopeId sc = getScopeDecor(ctx);
   Symbols.pushThisScope(sc);
 }
