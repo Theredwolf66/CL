@@ -86,8 +86,9 @@ void SymbolsListener::exitFunction(AslParser::FunctionContext *ctx) {
   //std::cout << emptyMainOverride << std::endl;
   //if (not emptyMainOverride) Symbols.popScope();
   
-  if (Symbols.findInCurrentScope(ident)) {
+  if (Symbols.findInStack(ident)==1) {
     Errors.declaredIdent(ctx->ID());
+    Symbols.popScope();
   }
   else {
     TypesMgr::TypeId tRet;
@@ -111,8 +112,7 @@ void SymbolsListener::exitFunction(AslParser::FunctionContext *ctx) {
     }
     Symbols.popScope();
     TypesMgr::TypeId tFunc = Types.createFunctionTy(lParamsTy, tRet);
-    if (not Symbols.findInCurrentScope(ident)) Symbols.addFunction(ident, tFunc);
-    else Errors.declaredIdent(ctx->ID());
+    Symbols.addFunction(ident, tFunc);
     /*if (emptyMainOverride) {
         
         std::vector<TypesMgr::TypeId> lParamsTyy;
@@ -153,6 +153,7 @@ void SymbolsListener::exitParameter_decl(AslParser::Parameter_declContext *ctx) 
                         }
                         
                     }
+                    
     }
     DEBUG_EXIT();
 }
@@ -176,6 +177,7 @@ void SymbolsListener::exitVariable_decl(AslParser::Variable_declContext *ctx) {
                         }
                         
                     }
+                    
     }
   DEBUG_EXIT();
 }
