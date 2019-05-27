@@ -112,6 +112,7 @@ expr    : procedure                                 # procExpr
         | NOT expr                                  # relational
         | expr op=(MUL|DIV) expr                    # arithmetic
         | expr op=(PLUS|RES) expr                   # arithmetic
+        | op=RES expr                                  # arithmetic
         | expr op=(EQUAL|DIF|BT|BE|LE|LT) expr    # relational
         | expr op=AND expr               # relational
         | expr op=OR expr               # relational
@@ -129,10 +130,13 @@ ident   : ID
 /// Lexer Rules
 //////////////////////////////////////////////////
 
+        // Strings (in quotes) with escape sequences
+STRING    : '"' ( ESC_SEQ | ~('\\'|'"') )* '"' ;
+        
 ASSIGN    : '=' ;
 EQUAL     : '==' ;
 DIF       : '!=' ;
-BT        : '=>' ;
+BT        : '>=' ;
 BE        : '>' ;
 LE        : '<=' ;
 LT        : '<' ;
@@ -175,9 +179,6 @@ INTVAL    : ('0'..'9')+ ;
 
 FLOATVAL  : ('0'..'9')*'.'('0'..'9')+;
 CHARVAL   : '\'' ( ESC_SEQ | ~('\\'|'\'') )? '\'' ;
-
-// Strings (in quotes) with escape sequences
-STRING    : '"' ( ESC_SEQ | ~('\\'|'"') )* '"' ;
 
 fragment
 ESC_SEQ   : '\\' ('b'|'t'|'n'|'f'|'r'|'"'|'\''|'\\') ;

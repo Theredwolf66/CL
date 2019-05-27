@@ -119,15 +119,19 @@ void TypeCheckListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
 
   TypesMgr::TypeId t2 = getTypeDecor(ctx->expr());
   if(ctx->ident()) {
-      if(ctx->expr() && !Types.isNumericTy(t2)) Errors.nonIntegerIndexInArrayAccess(ctx->expr());
+      bool isNotArray = false;
+      if(ctx->expr() && !Types.isNumericTy(t2)) isNotArray = true;
       t2 = getTypeDecor(ctx->ident());
       if(!Types.isArrayTy(t2)) Errors.nonArrayInArrayAccess(ctx->ident());
       else t2 = Types.getArrayElemType(t2);
+      if(isNotArray) Errors.nonIntegerIndexInArrayAccess(ctx->expr());
+      
   }
   if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and (not Types.copyableTypes(t1, t2)))
     Errors.incompatibleAssignment(ctx->ASSIGN());
   if ((not Types.isErrorTy(t1)) and (not getIsLValueDecor(ctx->left_expr())))
     Errors.nonReferenceableLeftExpr(ctx->left_expr());
+  //std::cout << t1 << "//" << t2 << std::endl;
   DEBUG_EXIT();
 }
 
@@ -245,20 +249,25 @@ void TypeCheckListener::enterArithmetic(AslParser::ArithmeticContext *ctx) {
 }
 void TypeCheckListener::exitArithmetic(AslParser::ArithmeticContext *ctx) {
   TypesMgr::TypeId t1 = getTypeDecor(ctx->expr(0));
-  //if (Types.isArrayTy(t1)) t1 = Types.getArrayElemType(t1);
-  TypesMgr::TypeId t2 = getTypeDecor(ctx->expr(1));
   TypesMgr::TypeId t = Types.createFloatTy();
-  //if (Types.isArrayTy(t2)) t2 = Types.getArrayElemType(t2);
-  if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and
-     ((not Types.isNumericTy(t1)) or (not Types.isNumericTy(t2)))){
-
-                Errors.incompatibleOperator(ctx->op);
-                t = Types.createErrorTy();
+  if (ctx->expr(1)) {
+        TypesMgr::TypeId t2 = getTypeDecor(ctx->expr(1));
+        if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and
+            ((not Types.isNumericTy(t1)) or (not Types.isNumericTy(t2)))){
+                        t = Types.createIntegerTy();
+                        Errors.incompatibleOperator(ctx->op);
+        } else if (Types.isIntegerTy(t1) and Types.isIntegerTy(t2)) t = Types.createIntegerTy();
+        if(Types.isErrorTy(t1) or Types.isErrorTy(t2)) t = Types.createErrorTy();
+        
+  } else {
+      if (not Types.isErrorTy(t1) and (not Types.isNumericTy(t1))){
+            Errors.incompatibleOperator(ctx->op);
+            t = Types.createIntegerTy();
+        } else{
+            if(Types.isIntegerTy(t1)) t = Types.createIntegerTy();
+        }
   }
-  else{
-    if(Types.isIntegerTy(t1) and Types.isIntegerTy(t2)) t = Types.createIntegerTy();
-  }
-  if(Types.isErrorTy(t1) or Types.isErrorTy(t2)) t = Types.createErrorTy();
+  
   putTypeDecor(ctx, t);
   putIsLValueDecor(ctx, false);
   DEBUG_EXIT();
@@ -363,6 +372,14 @@ void TypeCheckListener::enterProcExpr(AslParser::ProcExprContext *ctx) {
 }
 void TypeCheckListener::exitProcExpr(AslParser::ProcExprContext *ctx) {
     TypesMgr::TypeId t = getTypeDecor(ctx->procedure());
+    //std::cout << "FIRSSTtipus t: " << t << " es func: " << Types.isFunctionTy(t) << std::endl;
+    if (not Types.isErrorTy(t)) {
+        if (Types.isVoidFunction(getTypeDecor(ctx->procedure()->ident()))) {
+            Errors.isNotFunction(ctx->procedure()->ident());
+            t = Types.createErrorTy();
+        }
+    }
+    //std::cout << "SECONDtipus t: " << t << " es func: " << Types.isFunctionTy(t) << std::endl;
     putTypeDecor(ctx,t);
     DEBUG_EXIT();
 }
@@ -387,6 +404,8 @@ void TypeCheckListener::exitExprIdent(AslParser::ExprIdentContext *ctx) { //REME
                 Errors.nonIntegerIndexInArrayAccess(ctx->expr());
             }
         }
+        
+        
     }
     putTypeDecor(ctx, t);
 

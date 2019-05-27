@@ -76,29 +76,16 @@ void SymbolsListener::enterFunction(AslParser::FunctionContext *ctx) {
   std::string funcName = ctx->ID()->getText();
   SymTable::ScopeId sc = Symbols.pushNewScope(funcName);
   putScopeDecor(ctx, sc);
-  /*if (ctx->type()) {
-      
-    TypesMgr::TypeId t; //Els types encara no estan inicialitzats, per tant per a inicialitzar
-                        //els parametres en l'ordre correcte mirem quin tipus basic es aqui
-    if (ctx->type()->INT()) {
-        t = Types.createIntegerTy();
-    }
-    else if (ctx->type()->FLOAT()) {
-        t = Types.createFloatTy();
-    }
-    else if (ctx->type()->BOOL()) {
-        t = Types.createBooleanTy();
-    }
-    else if (ctx->type()->CHAR()) {
-        t = Types.createCharacterTy();
-    }
-    Symbols.addParameter("_result", t);
-  }*/
 }
+
 void SymbolsListener::exitFunction(AslParser::FunctionContext *ctx) {
 // Symbols.print();   
-  Symbols.popScope();
-  std::string ident = ctx->ID()->getText();
+    std::string ident = ctx->ID()->getText();
+  bool emptyMainOverride = (ident == "main") and (ctx->statements()->statement().size() == 0);
+  //std::cout << "statements sizes: " << ctx->statements()->statement().size() << "  name: " << ident << std::endl;
+  //std::cout << emptyMainOverride << std::endl;
+  if (not emptyMainOverride) Symbols.popScope();
+  
   if (Symbols.findInCurrentScope(ident)) {
     Errors.declaredIdent(ctx->ID());
   }
@@ -108,13 +95,13 @@ void SymbolsListener::exitFunction(AslParser::FunctionContext *ctx) {
     
     if (ctx->type()) {
         tRet = getTypeDecor(ctx->type());
-        
         Symbols.addParameter("_result", tRet);
     } else {
         tRet = Types.createVoidTy();
     }
-
+    
     auto paramList = ctx->parameters();
+    
     for (auto params : paramList->parameter_decl()) {
         TypesMgr::TypeId parameterType;
         if (params->type()) parameterType = getTypeDecor(params->type());
@@ -124,9 +111,20 @@ void SymbolsListener::exitFunction(AslParser::FunctionContext *ctx) {
         }
     }
     
+    
+    
     TypesMgr::TypeId tFunc = Types.createFunctionTy(lParamsTy, tRet);
+    
     Symbols.addFunction(ident, tFunc);
+    if (emptyMainOverride) {
+        Symbols.popScope();
+        std::vector<TypesMgr::TypeId> lParamsTyy;
+        TypesMgr::TypeId tFunk = Types.createFunctionTy(lParamsTyy, Types.createVoidTy());
+        Symbols.addFunction("main", tFunk);
+    }
   }
+  
+  
   DEBUG_EXIT();
 }
 
