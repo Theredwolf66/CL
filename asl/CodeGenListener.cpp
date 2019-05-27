@@ -164,7 +164,6 @@ void CodeGenListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
             auto code = code1 || code2;
             if (ctx->left_expr()->INTVAL() or ctx->left_expr()->expr()) {
                 t1 = getTypeDecor(ctx->ident());
-                t1 = Types.getArrayElemType(t1);
                 if (ctx->ident()) {
                     t2 = getTypeDecor(ctx->ident());
                     t2 = Types.getArrayElemType(t2);

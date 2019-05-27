@@ -124,7 +124,6 @@ void TypeCheckListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
       if(!Types.isArrayTy(t2)) Errors.nonArrayInArrayAccess(ctx->ident());
       else t2 = Types.getArrayElemType(t2);
   }
-  //std::cout << "t1: " << t1 << " t2: " << t2 << std::endl;
   if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and (not Types.copyableTypes(t1, t2)))
     Errors.incompatibleAssignment(ctx->ASSIGN());
   if ((not Types.isErrorTy(t1)) and (not getIsLValueDecor(ctx->left_expr())))
@@ -220,20 +219,21 @@ void TypeCheckListener::exitLeft_expr(AslParser::Left_exprContext *ctx) {
 
     if (ctx->INTVAL() or ctx->expr()) {
         if(!Types.isArrayTy(t)){
-            putTypeDecor(ctx, t);
+            t = Types.createErrorTy();
             Errors.nonArrayInArrayAccess(ctx->ident());
         }
-        else putTypeDecor(ctx, Types.getArrayElemType(t));
+        else t = Types.getArrayElemType(t);
         if (ctx->expr()) {
             TypesMgr::TypeId t1 = getTypeDecor(ctx->expr());
             if (!Types.isNumericTy(t1)) {
+                t = Types.createErrorTy();
                 Errors.nonIntegerIndexInArrayAccess(ctx->expr());
             }
         }
 
-    } else {
-        putTypeDecor(ctx, t);
     }
+    putTypeDecor(ctx, t);
+
 
     bool b = getIsLValueDecor(ctx->ident());
     putIsLValueDecor(ctx, b);
@@ -247,12 +247,18 @@ void TypeCheckListener::exitArithmetic(AslParser::ArithmeticContext *ctx) {
   TypesMgr::TypeId t1 = getTypeDecor(ctx->expr(0));
   //if (Types.isArrayTy(t1)) t1 = Types.getArrayElemType(t1);
   TypesMgr::TypeId t2 = getTypeDecor(ctx->expr(1));
-  //if (Types.isArrayTy(t2)) t2 = Types.getArrayElemType(t2);
-  if (((not Types.isErrorTy(t1)) and (not Types.isNumericTy(t1))) or
-      ((not Types.isErrorTy(t2)) and (not Types.isNumericTy(t2))))
-    Errors.incompatibleOperator(ctx->op);
   TypesMgr::TypeId t = Types.createFloatTy();
-  if(Types.isIntegerTy(t1) and Types.isIntegerTy(t2)) t = Types.createIntegerTy();
+  //if (Types.isArrayTy(t2)) t2 = Types.getArrayElemType(t2);
+  if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and
+     ((not Types.isNumericTy(t1)) or (not Types.isNumericTy(t2)))){
+
+                Errors.incompatibleOperator(ctx->op);
+                t = Types.createErrorTy();
+  }
+  else{
+    if(Types.isIntegerTy(t1) and Types.isIntegerTy(t2)) t = Types.createIntegerTy();
+  }
+  if(Types.isErrorTy(t1) or Types.isErrorTy(t2)) t = Types.createErrorTy();
   putTypeDecor(ctx, t);
   putIsLValueDecor(ctx, false);
   DEBUG_EXIT();
@@ -265,29 +271,26 @@ void TypeCheckListener::exitRelational(AslParser::RelationalContext *ctx) {
     TypesMgr::TypeId t1 = getTypeDecor(ctx->expr(0));
     TypesMgr::TypeId t = Types.createBooleanTy();
     if (ctx->NOT()) {
-        if ((not Types.isErrorTy(t1)) and (not Types.isBooleanTy(t1)))
+        if ((not Types.isErrorTy(t1)) and (not Types.isBooleanTy(t1))){
             Errors.booleanRequired(ctx);
-        putTypeDecor(ctx, t);
-        putIsLValueDecor(ctx, false);
-        DEBUG_EXIT();
+        }
     } else if (ctx->AND() or ctx->OR()) {
         TypesMgr::TypeId t2 = getTypeDecor(ctx->expr(1));
         std::string oper = ctx->op->getText();
         if (((not Types.isErrorTy(t1)) and (not Types.isBooleanTy(t1))) or ((not Types.isErrorTy(t2)) and (not Types.isBooleanTy(t2)))){
             Errors.incompatibleOperator(ctx->op);
         }
-        putTypeDecor(ctx, t);
-        putIsLValueDecor(ctx, false);
-        DEBUG_EXIT();
     } else {
         TypesMgr::TypeId t2 = getTypeDecor(ctx->expr(1));
         std::string oper = ctx->op->getText();
-        if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and (not Types.comparableTypes(t1, t2, oper)))
+        if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and (not Types.comparableTypes(t1, t2, oper))){
             Errors.incompatibleOperator(ctx->op);
-        putTypeDecor(ctx, t);
-        putIsLValueDecor(ctx, false);
-        DEBUG_EXIT();
+        }
+
     }
+    putTypeDecor(ctx, t);
+    putIsLValueDecor(ctx, false);
+    DEBUG_EXIT();
 }
 
 void TypeCheckListener::enterValue(AslParser::ValueContext *ctx) {
@@ -330,18 +333,21 @@ void TypeCheckListener::exitProcedure(AslParser::ProcedureContext *ctx) {
         Errors.isNotFunction(ctx->ident());
         putTypeDecor(ctx,Types.createErrorTy());
     } else  if (Types.isFunctionTy(t)) {
+        TypesMgr::TypeId t1 = Types.getFuncReturnType(t);
         if (ctx->expr().size() != Types.getNumOfParameters(t)) {
+            t1 = Types.createErrorTy();
             Errors.numberOfParameters(ctx->ident());
         } else {
             for (unsigned int i = 0; i < ctx->expr().size(); i++) {
                 auto expressionType = getTypeDecor(ctx->expr(i));
                 auto realType = Types.getParameterType(t,i);
                 if (not Types.equalTypes(expressionType, realType) and not (Types.isIntegerTy(expressionType)) and (Types.isFloatTy(realType))) {
+                    t1 = Types.createErrorTy();
                     Errors.incompatibleParameter(ctx->expr(i), i+1, ctx);
                 }
             }
         }
-        putTypeDecor(ctx,Types.getFuncReturnType(t));
+        putTypeDecor(ctx,t1);
     }
     
     
@@ -365,21 +371,21 @@ void TypeCheckListener::exitExprIdent(AslParser::ExprIdentContext *ctx) { //REME
 
     if (ctx->INTVAL() or ctx->expr()) {
         if(!Types.isArrayTy(t)){
-            putTypeDecor(ctx, t);
+            t = Types.createErrorTy();
             Errors.nonArrayInArrayAccess(ctx->ident());
         }
-        else putTypeDecor(ctx, Types.getArrayElemType(t));
+        else t = Types.getArrayElemType(t);
         if (ctx->expr()) {
             TypesMgr::TypeId t1 = getTypeDecor(ctx->expr());
 
             if (!Types.isNumericTy(t1)) {
-
+                t = Types.createErrorTy();
                 Errors.nonIntegerIndexInArrayAccess(ctx->expr());
             }
         }
-    } else {
-        putTypeDecor(ctx, t);
     }
+    putTypeDecor(ctx, t);
+
 
     bool b = getIsLValueDecor(ctx->ident());
     putIsLValueDecor(ctx, b);
