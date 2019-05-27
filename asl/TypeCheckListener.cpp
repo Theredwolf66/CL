@@ -329,10 +329,14 @@ void TypeCheckListener::enterProcedure(AslParser::ProcedureContext *ctx) {
 
 void TypeCheckListener::exitProcedure(AslParser::ProcedureContext *ctx) {
     auto t = getTypeDecor(ctx->ident());
-    if (not Types.isFunctionTy(t)) {
-        Errors.isNotFunction(ctx->ident());
+    //std::cout << "is error: " << Types.isErrorTy(t) << std::endl;
+    if (not Types.isFunctionTy(t) and not Types.isErrorTy(t)) {
+        //Errors.isNotFunction(ctx->ident());
+        Errors.isNotCallable(ctx->ident());
         putTypeDecor(ctx,Types.createErrorTy());
-    } else  if (Types.isFunctionTy(t)) {
+    } else if (Types.isErrorTy(t)) {
+        putTypeDecor(ctx,Types.createErrorTy());
+    } else if (Types.isFunctionTy(t)) {
         TypesMgr::TypeId t1 = Types.getFuncReturnType(t);
         if (ctx->expr().size() != Types.getNumOfParameters(t)) {
             t1 = Types.createErrorTy();
@@ -348,7 +352,7 @@ void TypeCheckListener::exitProcedure(AslParser::ProcedureContext *ctx) {
             }
         }
         putTypeDecor(ctx,t1);
-    }
+    } 
     
     
     DEBUG_EXIT();
