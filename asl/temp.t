@@ -2,47 +2,52 @@ function f
   params
     _result
     a
-    b
+    f
   endparams
 
   vars
     x 1
-    y 1
+    b 1
     z 10
   endvars
 
-     %1 = 67
-     %2 = a + %1
-     z[9] = %2
-     %3 = 34
-     x = %3
-     %4 = 56
-     %5 = z[9]
-     %6 = %4 + %5
-     z[3] = %6
-     %7 = z[3]
-     %8 = x < %7
-     ifFalse %8 goto else1
-     %9 = 78
-     x = %9
-     writef b
+     %1 = 5
+     readi z
+     %3 = 5
+     %2 = z[%3]
+     %4 = 88
+     %5 = %2 + %4
+     writei %5
+     readi b
+     readf f
+     ifFalse b goto endif1
+     %6 = 'h'
+     writec %6
      writeln
-     goto endif1
-  label else1 :
-     %11 = 99
-     x = %11
+     %6 = '\t'
+     writec %6
+     %6 = 'l'
+     writec %6
+     %6 = '\\'
+     writec %6
+     %6 = 'a'
+     writec %6
+     %7 = -. f
+     %8 = -. %7
+     %9 = -. %8
+     writef %9
+     writeln
   label endif1 :
-     %12 = z[3]
-     writei %12
-     writeln
-     %14 = 1
-     _result = %14
+     %11 = 1
+     _result = %11
      return
 endfunction
 
 function fz
   params
+    _result
     r
+    u
   endparams
 
   label startWhile1 :
@@ -55,35 +60,69 @@ function fz
      r = %4
      goto startWhile1
   label endwhile1 :
+     %5 = 0
+     %6 = r == %5
+     ifFalse %6 goto endif1
+     pushparam 
+     %7 = 55555
+     pushparam %7
+     %8 = 1
+     %9 = 4
+     %10 = %8 / %9
+     %11 = float %10
+     pushparam %11
+     call f
+     popparam 
+     popparam 
+     popparam 
+  label endif1 :
+     %12 = 3
+     %13 = r + %12
+     %15 = float %13
+     %14 = %15 *. u
+     _result = %14
      return
 endfunction
 
 function main
   vars
     a 1
+    q 1
   endvars
 
-     pushparam 
-     %1 = 3
-     pushparam %1
-     %2 = 2
-     %3 = float %2
-     pushparam %3
-     call f
-     popparam 
-     popparam 
-     popparam %4
-     ifFalse %4 goto endif1
-     %5 = 3.7
-     %7 = float a
-     %6 = %7 +. %5
-     %8 = 4
-     %10 = float %8
-     %9 = %6 +. %10
-     writef %9
-     writeln
-  label endif1 :
-     return
+   %1 = 0
+   %2 = float %1
+   q = %2
+   pushparam 
+   %3 = 3
+   %4 = 4
+   %5 = %3 + %4
+   pushparam %5
+   pushparam 
+   %6 = 4444
+   pushparam %6
+   %7 = 2
+   %9 = float %7
+   %8 = q +. %9
+   pushparam %8
+   call fz
+   popparam 
+   popparam 
+   popparam %10
+   pushparam %10
+   call fz
+   popparam 
+   popparam 
+   popparam %11
+   q = %11
+   %12 = 3.7
+   %13 = q +. %12
+   %14 = 4
+   %16 = float %14
+   %15 = %13 +. %16
+   writef %15
+   writeln
+   return
 endfunction
 
 

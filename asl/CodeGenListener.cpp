@@ -178,9 +178,24 @@ void CodeGenListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
             auto code = code1 || code2;
             if (ctx->left_expr()->expr() or ctx->left_expr()->INTVAL()) {
                 t1 = getTypeDecor(ctx->ident());
+                
+                if (Symbols.isParameterClass(addr1)) {
+                    std::string temp3 = "%"+codeCounters.newTEMP();
+                    code = code || instruction::LOAD(temp3,getAddrDecor(ctx->ident()));
+                    addr1 = temp3;
+                }
+                
                 if (ctx->ident()) {
                     t2 = getTypeDecor(ctx->ident());
                     t2 = Types.getArrayElemType(t2);
+                    
+                    //if (offs2.at(0) != "%") { //no es una temp
+                    //if (offs2[0] != "%") { //no es una temp
+                        auto temp3 = "%" + codeCounters.newTEMP();
+                        code = code || instruction::LOAD(temp3,offs2);
+                        offs2 = temp3;
+                    //}
+                    
                     auto temp = "%" + codeCounters.newTEMP();
                     addr2 = getAddrDecor(ctx->ident());
                     code = code || instruction::LOADX(temp, addr2,offs2);
@@ -290,12 +305,20 @@ void CodeGenListener::enterReadStmt(AslParser::ReadStmtContext *ctx) {
 void CodeGenListener::exitReadStmt(AslParser::ReadStmtContext *ctx) {
   instructionList  code;
   std::string     addr1 = getAddrDecor(ctx->left_expr());
-  // std::string     offs1 = getOffsetDecor(ctx->left_expr());
+  std::string     offs1 = getOffsetDecor(ctx->left_expr());
   instructionList code1 = getCodeDecor(ctx->left_expr());
   TypesMgr::TypeId tid1 = getTypeDecor(ctx->left_expr());
-  if(Types.isFloatTy(tid1)) code = code1 || instruction::READF(addr1);
-  else if(Types.isCharacterTy(tid1)) code = code1 || instruction::READC(addr1);
-  else code = code1 || instruction::READI(addr1);
+  if (ctx->left_expr()->INTVAL() or ctx->left_expr()->expr()) {
+        std::string temp = "%"+codeCounters.newTEMP();
+        if(Types.isFloatTy(tid1)) code = code1 || instruction::READF(temp);
+        else if(Types.isCharacterTy(tid1)) code = code1 || instruction::READC(temp);
+        else code = code1 || instruction::READI(temp);
+        code = code || instruction::XLOAD(addr1,offs1,temp);
+  } else {
+    if(Types.isFloatTy(tid1)) code = code1 || instruction::READF(addr1);
+    else if(Types.isCharacterTy(tid1)) code = code1 || instruction::READC(addr1);
+    else code = code1 || instruction::READI(addr1);
+  }
   putCodeDecor(ctx, code);
   DEBUG_EXIT();
 }
@@ -384,23 +407,40 @@ void CodeGenListener::enterLeft_expr(AslParser::Left_exprContext *ctx) {
   DEBUG_ENTER();
 }
 void CodeGenListener::exitLeft_expr(AslParser::Left_exprContext *ctx) {
-  putAddrDecor(ctx, getAddrDecor(ctx->ident()));
+    auto addr1 = getAddrDecor(ctx->ident());
+    auto code = getCodeDecor(ctx->ident());
+  
   //putOffsetDecor(ctx, getOffsetDecor(ctx->ident()));
   if (ctx->INTVAL()) {
       std::string temp = "%"+codeCounters.newTEMP();
-      auto code = getCodeDecor(ctx->ident());
+      
       code = code || instruction::LOAD(temp,ctx->INTVAL()->getText());
+      
+      if (Symbols.isParameterClass(addr1)) {
+          std::string temp3 = "%"+codeCounters.newTEMP();
+          code = code || instruction::LOAD(temp3,getAddrDecor(ctx->ident()));
+          addr1 = temp3;
+      }
+      
       putOffsetDecor(ctx, temp);
       putCodeDecor(ctx, code);
   }
   else if (ctx->expr()) {
+      
+      if (Symbols.isParameterClass(addr1)) {
+          std::string temp3 = "%"+codeCounters.newTEMP();
+          code = code || instruction::LOAD(temp3,getAddrDecor(ctx->ident()));
+          addr1 = temp3;
+      }
+      
       putOffsetDecor(ctx, getOffsetDecor(ctx->expr()));
-      putCodeDecor(ctx, getCodeDecor(ctx->expr()));
+      putCodeDecor(ctx, code);
   }
   else {
       putOffsetDecor(ctx, getOffsetDecor(ctx->ident()));
-      putCodeDecor(ctx, getCodeDecor(ctx->ident()));
+      putCodeDecor(ctx, code);
   }
+  putAddrDecor(ctx, addr1);
   DEBUG_ENTER();
 }
 
@@ -645,28 +685,41 @@ void CodeGenListener::enterExprIdent(AslParser::ExprIdentContext *ctx) {
   DEBUG_ENTER();
 }
 void CodeGenListener::exitExprIdent(AslParser::ExprIdentContext *ctx) {
-  putAddrDecor(ctx, getAddrDecor(ctx->ident()));
-
+  auto identType = getTypeDecor(ctx->ident());
+  auto addr1 = getAddrDecor(ctx->ident());
+    putAddrDecor(ctx, addr1);
+   
   if (ctx->INTVAL()) {
       std::string temp = "%"+codeCounters.newTEMP();
       std::string temp2 = "%"+codeCounters.newTEMP();
-      instructionList code  = instruction::LOAD(temp2,ctx->INTVAL()->getText()) || instruction::LOADX(temp,getAddrDecor(ctx->ident()),temp2);
+      instructionList code  = instruction::LOAD(temp2,ctx->INTVAL()->getText());
+      
+      if (Symbols.isParameterClass(addr1)) {
+          std::string temp3 = "%"+codeCounters.newTEMP();
+          code = code || instruction::LOAD(temp3,getAddrDecor(ctx->ident()));
+          addr1 = temp3;
+      }
+      code = code || instruction::LOADX(temp,addr1,temp2);
       putOffsetDecor(ctx, temp);
       putCodeDecor(ctx, code);
       putAddrDecor(ctx, temp);
-      
-      
       
   }
   else if (ctx->expr()){
       instructionList code = getCodeDecor(ctx->expr());
+      
       std::string temp = "%"+codeCounters.newTEMP();
-      code = code || instruction::LOADX(temp,getAddrDecor(ctx->ident()),getOffsetDecor(ctx->expr()));
+      auto identType = getTypeDecor(ctx->ident());
+      if (Types.isArrayTy(identType)) {
+          std::string temp2 = "%"+codeCounters.newTEMP();
+          code = code || instruction::LOAD(temp2,getAddrDecor(ctx->ident()));
+          addr1 = temp2;
+      }
+      
+      code = code || instruction::LOADX(temp,addr1,getOffsetDecor(ctx->expr()));
       putOffsetDecor(ctx, temp);
       putCodeDecor(ctx, code);
       putAddrDecor(ctx, temp);
-      //TODO Mirar si cal i implementar ficar arrays dins d'arrays. El problema segurament es a que passa el offset incorrecte, i hauria de passar una var temp
-      //TODO alternativament comprovar que no hi hagi arrays dins d'arrays, que si no es lia
   }
   else {
       putOffsetDecor(ctx, getOffsetDecor(ctx->ident()));
