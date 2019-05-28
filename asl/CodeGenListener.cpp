@@ -459,8 +459,10 @@ void CodeGenListener::exitArithmetic(AslParser::ArithmeticContext *ctx) {
     
     if (not ctx->expr(1)) {
         code = code1;
-        if (Types.isIntegerTy(t1)) code = code || instruction::NEG(temp,addr1);
-        else code = code || instruction::FNEG(temp,addr1);
+        if (ctx->RES()) {
+            if (Types.isIntegerTy(t1)) code = code || instruction::NEG(temp,addr1);
+            else code = code || instruction::FNEG(temp,addr1);
+        }
     } else {
         
         std::string     addr2 = getAddrDecor(ctx->expr(1));
@@ -489,7 +491,11 @@ void CodeGenListener::exitArithmetic(AslParser::ArithmeticContext *ctx) {
                 code = code || instruction::FADD(temp, addr1, addr2);
         }
         else{
-            if (ctx->MUL())
+            if (ctx->MOD()) {
+                std::string temp3 = "%"+codeCounters.newTEMP();
+                code = code || instruction::DIV(temp3, addr1, addr2) || instruction::MUL(temp3, temp3, addr2) || instruction::SUB(temp, addr1, temp3);
+            }
+            else if (ctx->MUL())
                 code = code || instruction::MUL(temp, addr1, addr2);
             else  if (ctx->DIV())
                 code = code || instruction::DIV(temp, addr1, addr2);

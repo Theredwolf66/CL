@@ -109,9 +109,9 @@ expr    : procedure                                 # procExpr
         | ident '[' INTVAL ']'                        # exprIdent //TODO Propagar correctament el codi, fer que les arrays aqui dins funcionin
         | ident '[' expr ']'                        # exprIdent
         | NOT expr                                  # relational
+        | op=(PLUS|RES) expr                                  # arithmetic
         | expr op=(MUL|DIV|MOD) expr                    # arithmetic
         | expr op=(PLUS|RES) expr                   # arithmetic
-        | op=RES expr                                  # arithmetic
         | expr op=(EQUAL|DIF|BT|BE|LE|LT) expr    # relational
         | expr op=AND expr               # relational
         | expr op=OR expr               # relational
@@ -120,6 +120,7 @@ expr    : procedure                                 # procExpr
         | CHARVAL                              # value
         | FLOATVAL                              # value
         | ident                               # exprIdent
+        
         ;
 
 ident   : ID
