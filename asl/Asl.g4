@@ -75,8 +75,7 @@ statements
 // The different types of instructions
 statement
           
-        : left_expr ASSIGN ident '[' INTVAL ']' ';'  #assignStmt 
-        | left_expr ASSIGN ident '[' expr ']' ';'  #assignStmt
+        : left_expr ASSIGN ident '[' expr ']' ';'  #assignStmt
         // Assignment
         | left_expr ASSIGN expr ';'           # assignStmt
           // if-then-else statement (else is optional)

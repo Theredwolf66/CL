@@ -176,16 +176,13 @@ void CodeGenListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
             auto code2 = getCodeDecor(ctx->expr());
             TypesMgr::TypeId t2 = getTypeDecor(ctx->expr());
             auto code = code1 || code2;
-            if (ctx->left_expr()->INTVAL() or ctx->left_expr()->expr()) {
+            if (ctx->left_expr()->expr() or ctx->left_expr()->INTVAL()) {
                 t1 = getTypeDecor(ctx->ident());
                 if (ctx->ident()) {
                     t2 = getTypeDecor(ctx->ident());
                     t2 = Types.getArrayElemType(t2);
                     auto temp = "%" + codeCounters.newTEMP();
                     addr2 = getAddrDecor(ctx->ident());
-                    if (ctx->INTVAL()) {
-                        offs2 = ctx->INTVAL()->getText();
-                    }
                     code = code || instruction::LOADX(temp, addr2,offs2);
                     addr2 = temp;
                 }
@@ -201,9 +198,6 @@ void CodeGenListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
                 t2 = getTypeDecor(ctx->ident());
                 t2 = Types.getArrayElemType(t2);
                 addr2 = getAddrDecor(ctx->ident());
-                if (ctx->INTVAL()) {
-                    offs2 = ctx->INTVAL()->getText();
-                }
 
                 if(Types.isIntegerTy(t2) and Types.isFloatTy(t1)) {
                     auto temp = "%" + codeCounters.newTEMP();
@@ -227,40 +221,7 @@ void CodeGenListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
 
             putCodeDecor(ctx, code);
             DEBUG_EXIT();
-         /*if(Types.isArrayTy(tid1) && Types.isArrayTy(tid2))  {
-            auto identName = ctx->left_expr()->ident()->ID()->getText();
-                code = code || instruction::ALOAD(addr1, addr2);
-                putCodeDecor(ctx, code);
-                DEBUG_EXIT();
-                return;
-        }
-        else if(offs1 != "" && (Types.isArrayTy(tid1))) { //&& (Types.isArrayTy(tid1))
-                auto identName = ctx->left_expr()->ident()->ID()->getText();
-
-                if (Symbols.isParameterClass(identName)) {
-                        auto tmp = "%" + codeCounters.newTEMP();
-                        code = code || instruct&aion::LOAD(tmp, addr1);
-                        addr1 = tmp;
-                }
-
-                code = code || instruction::XLOAD(addr1, offs1, addr2);
-                putCodeDecor(ctx, code);
-                DEBUG_EXIT();
-                return;
-        } else if (offs2 != "" && (Types.isArrayTy(tid2))) {
-            auto identName = ctx->left_expr()->ident()->ID()->getText();
-
-                if (Symbols.isParameterClass(identName)) {
-                        auto tmp = "%" + codeCounters.newTEMP();
-                        code = code || instruction::LOAD(tmp, addr1);
-                        addr1 = tmp;
-                }
-
-                code = code || instruction::LOADX(addr1, addr2, offs2);
-                putCodeDecor(ctx, code);
-                DEBUG_EXIT();
-                return;
-        }*/
+         
 
 
 }
@@ -426,8 +387,11 @@ void CodeGenListener::exitLeft_expr(AslParser::Left_exprContext *ctx) {
   putAddrDecor(ctx, getAddrDecor(ctx->ident()));
   //putOffsetDecor(ctx, getOffsetDecor(ctx->ident()));
   if (ctx->INTVAL()) {
-      putOffsetDecor(ctx, ctx->INTVAL()->getText());
-      putCodeDecor(ctx, getCodeDecor(ctx->ident()));
+      std::string temp = "%"+codeCounters.newTEMP();
+      auto code = getCodeDecor(ctx->ident());
+      code = code || instruction::LOAD(temp,ctx->INTVAL()->getText());
+      putOffsetDecor(ctx, temp);
+      putCodeDecor(ctx, code);
   }
   else if (ctx->expr()) {
       putOffsetDecor(ctx, getOffsetDecor(ctx->expr()));
@@ -685,10 +649,14 @@ void CodeGenListener::exitExprIdent(AslParser::ExprIdentContext *ctx) {
 
   if (ctx->INTVAL()) {
       std::string temp = "%"+codeCounters.newTEMP();
-      instructionList code  = instruction::LOADX(temp,getAddrDecor(ctx->ident()),ctx->INTVAL()->getText());
+      std::string temp2 = "%"+codeCounters.newTEMP();
+      instructionList code  = instruction::LOAD(temp2,ctx->INTVAL()->getText()) || instruction::LOADX(temp,getAddrDecor(ctx->ident()),temp2);
       putOffsetDecor(ctx, temp);
       putCodeDecor(ctx, code);
       putAddrDecor(ctx, temp);
+      
+      
+      
   }
   else if (ctx->expr()){
       instructionList code = getCodeDecor(ctx->expr());
