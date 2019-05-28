@@ -137,9 +137,15 @@ void TypeCheckListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
       if(ctx->expr() && !Types.isNumericTy(t2)) isNotArray = true;
       t2 = getTypeDecor(ctx->ident());
       if((not Types.isErrorTy(t2))){
-          if(!Types.isArrayTy(t2)) Errors.nonArrayInArrayAccess(ctx->ident());
+          if((not Types.isArrayTy(t2))) {
+              Errors.nonArrayInArrayAccess(ctx->ident());
+              t2 = Types.createErrorTy();
+          }
           else t2 = Types.getArrayElemType(t2);
-          if(isNotArray) Errors.nonIntegerIndexInArrayAccess(ctx->expr());
+          if(isNotArray) {
+              Errors.nonIntegerIndexInArrayAccess(ctx->expr());
+              t2 = Types.createErrorTy();
+          }
       }
 
   }
@@ -274,7 +280,13 @@ void TypeCheckListener::exitArithmetic(AslParser::ArithmeticContext *ctx) {
             ((not Types.isNumericTy(t1)) or (not Types.isNumericTy(t2)))){
                         t = Types.createIntegerTy();
                         Errors.incompatibleOperator(ctx->op);
-        } else if (Types.isIntegerTy(t1) and Types.isIntegerTy(t2)) t = Types.createIntegerTy();
+        }
+        else if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2))  and ctx->MOD()
+                 and ((not Types.isIntegerTy(t1)) or (not Types.isIntegerTy(t2)))) {
+            t = Types.createIntegerTy();
+            Errors.incompatibleOperator(ctx->op);
+        }
+        else if (Types.isIntegerTy(t1) and Types.isIntegerTy(t2)) t = Types.createIntegerTy();
         if(Types.isErrorTy(t1) or Types.isErrorTy(t2)) t = Types.createErrorTy();
 
   } else {
@@ -366,14 +378,13 @@ void TypeCheckListener::exitProcedure(AslParser::ProcedureContext *ctx) {
     } else if (Types.isFunctionTy(t)) {
         TypesMgr::TypeId t1 = Types.getFuncReturnType(t);
         if (ctx->expr().size() != Types.getNumOfParameters(t)) {
-            t1 = Types.createErrorTy();
+
             Errors.numberOfParameters(ctx->ident());
         } else {
             for (unsigned int i = 0; i < ctx->expr().size(); i++) {
                 auto expressionType = getTypeDecor(ctx->expr(i));
                 auto realType = Types.getParameterType(t,i);
-                if (not Types.equalTypes(expressionType, realType) and not (Types.isIntegerTy(expressionType)) and (Types.isFloatTy(realType))) {
-                    t1 = Types.createErrorTy();
+                if (not Types.equalTypes(expressionType, realType) and ((not Types.isFloatTy(realType)) or (not Types.isIntegerTy(expressionType)))) {
                     Errors.incompatibleParameter(ctx->expr(i), i+1, ctx);
                 }
             }

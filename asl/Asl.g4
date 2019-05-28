@@ -110,7 +110,7 @@ expr    : procedure                                 # procExpr
         | ident '[' INTVAL ']'                        # exprIdent //TODO Propagar correctament el codi, fer que les arrays aqui dins funcionin
         | ident '[' expr ']'                        # exprIdent
         | NOT expr                                  # relational
-        | expr op=(MUL|DIV) expr                    # arithmetic
+        | expr op=(MUL|DIV|MOD) expr                    # arithmetic
         | expr op=(PLUS|RES) expr                   # arithmetic
         | op=RES expr                                  # arithmetic
         | expr op=(EQUAL|DIF|BT|BE|LE|LT) expr    # relational
@@ -144,6 +144,7 @@ PLUS      : '+' ;
 MUL       : '*';
 RES       : '-';
 DIV       : '/';
+MOD       : '%';
 VAR       : 'var';
 
 INT       : 'int';
