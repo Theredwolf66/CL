@@ -59,7 +59,7 @@ TypeCheckListener::TypeCheckListener(TypesMgr       & Types,
 
 void TypeCheckListener::enterProgram(AslParser::ProgramContext *ctx) {
   DEBUG_ENTER();
-  
+
   SymTable::ScopeId sc = getScopeDecor(ctx);
   Symbols.pushThisScope(sc);
 }
@@ -75,7 +75,20 @@ void TypeCheckListener::enterFunction(AslParser::FunctionContext *ctx) {
   DEBUG_ENTER();
   SymTable::ScopeId sc = getScopeDecor(ctx);
   Symbols.pushThisScope(sc);
-  //setCurrentFunctionTy no existeix, es fa automaticament, la docu esta antiquada
+  auto ret = getTypeDecor(ctx->type());
+  std::vector<TypesMgr::TypeId> lParamsTy;
+  auto paramList = ctx->parameters();
+  for (auto params : paramList->parameter_decl()) {
+      TypesMgr::TypeId parameterType;
+      if (params->type()) parameterType = getTypeDecor(params->type());
+      else if (params->array_decl()) parameterType = getTypeDecor(params->array_decl());
+      for (auto ids : params->ID()) {
+          lParamsTy.push_back(parameterType);
+      }
+  }
+  auto t = Types.createFunctionTy(lParamsTy,ret);
+  Symbols.setCurrentFunctionTy(t);
+  //std::cout <<"EN EL TYPE " <<Symbols.getCurrentFunctionTy() << std::endl;
   // Symbols.print();
 }
 
@@ -123,15 +136,18 @@ void TypeCheckListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
       bool isNotArray = false;
       if(ctx->expr() && !Types.isNumericTy(t2)) isNotArray = true;
       t2 = getTypeDecor(ctx->ident());
-      if(!Types.isArrayTy(t2)) Errors.nonArrayInArrayAccess(ctx->ident());
-      else t2 = Types.getArrayElemType(t2);
-      if(isNotArray) Errors.nonIntegerIndexInArrayAccess(ctx->expr());
-      
+      if((not Types.isErrorTy(t2))){
+          if(!Types.isArrayTy(t2)) Errors.nonArrayInArrayAccess(ctx->ident());
+          else t2 = Types.getArrayElemType(t2);
+          if(isNotArray) Errors.nonIntegerIndexInArrayAccess(ctx->expr());
+      }
+
   }
-  if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and (not Types.copyableTypes(t1, t2)))
-    Errors.incompatibleAssignment(ctx->ASSIGN());
   if ((not Types.isErrorTy(t1)) and (not getIsLValueDecor(ctx->left_expr())))
     Errors.nonReferenceableLeftExpr(ctx->left_expr());
+  if ((not Types.isErrorTy(t1)) and (not Types.isErrorTy(t2)) and (not Types.copyableTypes(t1, t2)))
+    Errors.incompatibleAssignment(ctx->ASSIGN());
+
   //std::cout << t1 << "//" << t2 << std::endl;
   DEBUG_EXIT();
 }
@@ -197,13 +213,13 @@ void TypeCheckListener::enterReturnExpr_(AslParser::ReturnExpr_Context *ctx) {
 void TypeCheckListener::exitReturnExpr_(AslParser::ReturnExpr_Context *ctx) {
     auto tf = Symbols.getCurrentFunctionTy();
     if (Types.isVoidFunction(tf)) {
-        if (ctx->expr()) Errors.incompatibleReturn(ctx);
+        if (ctx->expr()) Errors.incompatibleReturn(ctx->RETURN());
     } else {
         TypesMgr::TypeId t1 = getTypeDecor(ctx->expr());
-        TypesMgr::TypeId t2 = Types.getFuncReturnType(tf); 
+        TypesMgr::TypeId t2 = Types.getFuncReturnType(tf);
         if (not ((Types.isIntegerTy(t1)) and (Types.isFloatTy(t2))) and not Types.equalTypes(t1,t2))
-            Errors.incompatibleReturn(ctx); //Docu antiquada, s'ha de tornar el node principal
-        
+            Errors.incompatibleReturn(ctx->RETURN());
+
     }
     DEBUG_EXIT();
 }
@@ -224,8 +240,9 @@ void TypeCheckListener::exitLeft_expr(AslParser::Left_exprContext *ctx) {
 
     if (ctx->INTVAL() or ctx->expr()) {
         if(!Types.isArrayTy(t)){
+            if((not Types.isErrorTy(t)))Errors.nonArrayInArrayAccess(ctx->ident());
             t = Types.createErrorTy();
-            Errors.nonArrayInArrayAccess(ctx->ident());
+
         }
         else t = Types.getArrayElemType(t);
         if (ctx->expr()) {
@@ -259,7 +276,7 @@ void TypeCheckListener::exitArithmetic(AslParser::ArithmeticContext *ctx) {
                         Errors.incompatibleOperator(ctx->op);
         } else if (Types.isIntegerTy(t1) and Types.isIntegerTy(t2)) t = Types.createIntegerTy();
         if(Types.isErrorTy(t1) or Types.isErrorTy(t2)) t = Types.createErrorTy();
-        
+
   } else {
       if (not Types.isErrorTy(t1) and (not Types.isNumericTy(t1))){
             Errors.incompatibleOperator(ctx->op);
@@ -268,7 +285,7 @@ void TypeCheckListener::exitArithmetic(AslParser::ArithmeticContext *ctx) {
             if(Types.isIntegerTy(t1)) t = Types.createIntegerTy();
         }
   }
-  
+
   putTypeDecor(ctx, t);
   putIsLValueDecor(ctx, false);
   DEBUG_EXIT();
@@ -362,9 +379,9 @@ void TypeCheckListener::exitProcedure(AslParser::ProcedureContext *ctx) {
             }
         }
         putTypeDecor(ctx,t1);
-    } 
-    
-    
+    }
+
+
     DEBUG_EXIT();
 }
 
@@ -405,8 +422,8 @@ void TypeCheckListener::exitExprIdent(AslParser::ExprIdentContext *ctx) { //REME
                 Errors.nonIntegerIndexInArrayAccess(ctx->expr());
             }
         }
-        
-        
+
+
     }
     putTypeDecor(ctx, t);
 

@@ -74,7 +74,6 @@ void CodeGenListener::enterFunction(AslParser::FunctionContext *ctx) {
   Symbols.pushThisScope(sc);
   codeCounters.reset();
   subroutine & subrRef = Code.get_last_subroutine();
-  if (not Types.isVoidFunction(Symbols.getCurrentFunctionTy())) subrRef.add_param("_result");
 }
 void CodeGenListener::exitFunction(AslParser::FunctionContext *ctx) {
   subroutine & subrRef = Code.get_last_subroutine();
