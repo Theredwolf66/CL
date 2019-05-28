@@ -594,7 +594,8 @@ void CodeGenListener::exitValue(AslParser::ValueContext *ctx) {
 
   }
   if (ctx->CHARVAL()){
-    code = instruction::CHLOAD(temp, text);
+      if (text.size() == 3) code = instruction::CHLOAD(temp, text.substr(1,1));
+    else code = instruction::CHLOAD(temp, text.substr(1,2));
 
   }
   if(ctx->BOOLVAL()){
