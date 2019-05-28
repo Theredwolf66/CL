@@ -38,6 +38,7 @@
 #include "../common/code.h"
 
 #include <string>
+#include <map>
 
 // using namespace std;
 
@@ -155,6 +156,8 @@ private:
   std::string       getAddrDecor   (antlr4::ParserRuleContext *ctx);
   std::string       getOffsetDecor (antlr4::ParserRuleContext *ctx);
   instructionList   getCodeDecor   (antlr4::ParserRuleContext *ctx);
+  
+  std::map <std::string, std::string> arrayLocs;
 
   // Setters for the necessary tree node attributes:
   //   Addr, Offset and Code

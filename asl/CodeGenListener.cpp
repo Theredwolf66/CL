@@ -79,6 +79,7 @@ void CodeGenListener::enterFunction(AslParser::FunctionContext *ctx) {
   if (not Types.isVoidFunction(Symbols.getCurrentFunctionTy())) {
                   subrRef.add_param("_result");
   }
+  
 }
 void CodeGenListener::exitFunction(AslParser::FunctionContext *ctx) {
   subroutine & subrRef = Code.get_last_subroutine();
@@ -186,6 +187,7 @@ void CodeGenListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
                 }
                 
                 if (ctx->ident()) {
+                    
                     t2 = getTypeDecor(ctx->ident());
                     t2 = Types.getArrayElemType(t2);
                     
@@ -198,6 +200,9 @@ void CodeGenListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
                     
                     auto temp = "%" + codeCounters.newTEMP();
                     addr2 = getAddrDecor(ctx->ident());
+                    
+                    if (arrayLocs.count(addr2)) addr2 = arrayLocs[addr2];
+                    
                     code = code || instruction::LOADX(temp, addr2,offs2);
                     addr2 = temp;
                 }
@@ -213,6 +218,7 @@ void CodeGenListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
                 t2 = getTypeDecor(ctx->ident());
                 t2 = Types.getArrayElemType(t2);
                 addr2 = getAddrDecor(ctx->ident());
+                //if (arrayLocs.count(addr2)) addr2 = arrayLocs[addr2]; //!!!
 
                 if(Types.isIntegerTy(t2) and Types.isFloatTy(t1)) {
                     auto temp = "%" + codeCounters.newTEMP();
@@ -224,7 +230,15 @@ void CodeGenListener::exitAssignStmt(AslParser::AssignStmtContext *ctx) {
                 else code = code || instruction::LOADX(addr1, addr2,offs2);
 
             } else if(Types.isArrayTy(t2)){
-                code = code || instruction::ALOAD(addr1, addr2);
+                if (Symbols.isParameterClass(addr1)) {
+                    //TODO arreglar per si addr2 es temp / esta a arrayLocs
+                    auto temp = "%" + codeCounters.newTEMP();
+                    code = code || instruction::ALOAD(temp, addr2) || instruction::LOAD(addr1, temp);
+                } else {
+                    auto temp = "%" + codeCounters.newTEMP();
+                    code = code || instruction::LOAD(temp, addr2);
+                    arrayLocs[addr1] = temp;
+                }
             } else {
                 if(Types.isIntegerTy(t2) and Types.isFloatTy(t1)) {
                     auto tmp = "%" + codeCounters.newTEMP();
@@ -410,6 +424,7 @@ void CodeGenListener::exitLeft_expr(AslParser::Left_exprContext *ctx) {
     auto addr1 = getAddrDecor(ctx->ident());
     auto code = getCodeDecor(ctx->ident());
   
+    if (arrayLocs.count(addr1)) addr1 = arrayLocs[addr1];
   //putOffsetDecor(ctx, getOffsetDecor(ctx->ident()));
   if (ctx->INTVAL()) {
       std::string temp = "%"+codeCounters.newTEMP();
@@ -643,10 +658,16 @@ void CodeGenListener::exitProcedure(AslParser::ProcedureContext *ctx) {
         auto t = getTypeDecor(params);
         
         if (Types.isArrayTy(t)) {
-            std::string temp = "%"+codeCounters.newTEMP();
-            codeTemp = codeTemp || instruction::ALOAD(temp, addrTemp);
-            addrTemp = temp;
-        }
+            if (arrayLocs.count(getAddrDecor(params))) {
+                addrTemp = arrayLocs[getAddrDecor(params)];
+            } else {
+                std::string temp = "%"+codeCounters.newTEMP();
+                codeTemp = codeTemp || instruction::ALOAD(temp, addrTemp);
+                addrTemp = temp;
+                arrayLocs[getAddrDecor(params)] = temp;
+            }
+            
+        } 
         //mirar si cal castejar un int a un float
         auto t2 = Types.getParameterType(functionType,currentParameter);
         if (Types.isIntegerTy(t) and Types.isFloatTy(t2)) {
@@ -660,8 +681,19 @@ void CodeGenListener::exitProcedure(AslParser::ProcedureContext *ctx) {
     //cridar funcio
     code = code || instruction::CALL(functionNode->ID()->getText());
     //fer pop a parametres
-    for (auto params : ctx->expr()) {
-        code = code || instruction::POP();
+    for (int i = ctx->expr().size()-1; i >= 0; i--) {
+        auto params = ctx->expr(i);
+        auto addr1 = getAddrDecor(params);
+        auto funcType = getTypeDecor(ctx->ident());
+        auto parType = Types.getParameterType(funcType,i);
+        if (Types.isArrayTy(parType)) {
+            if (not arrayLocs.count(addr1)) {
+                std::string temp = "%"+codeCounters.newTEMP();
+                arrayLocs[addr1] = temp;
+                code = code || instruction::POP(temp);
+            }
+            else code = code || instruction::POP(arrayLocs[addr1]);
+        } else code = code || instruction::POP();
     }
     
     putCodeDecor(ctx, code);
@@ -695,6 +727,8 @@ void CodeGenListener::exitExprIdent(AslParser::ExprIdentContext *ctx) {
   auto identType = getTypeDecor(ctx->ident());
   auto addr1 = getAddrDecor(ctx->ident());
     putAddrDecor(ctx, addr1);
+    
+    if (arrayLocs.count(addr1)) addr1 = arrayLocs[addr1];
    
   if (ctx->INTVAL()) {
       std::string temp = "%"+codeCounters.newTEMP();
@@ -729,6 +763,7 @@ void CodeGenListener::exitExprIdent(AslParser::ExprIdentContext *ctx) {
       putAddrDecor(ctx, temp);
   }
   else {
+
       putOffsetDecor(ctx, getOffsetDecor(ctx->ident()));
       putCodeDecor(ctx, getCodeDecor(ctx->ident()));
   }
