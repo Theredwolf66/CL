@@ -31,6 +31,7 @@ function main
   label endif1 :
      %5 = 1
      f = %5
+  label startWhile1 :
      %6 = not end
      %7 = 1
      %8 = %7 < n
@@ -42,7 +43,7 @@ function main
      %11 = 1
      %12 = n - %11
      n = %12
-     goto while1
+     goto startWhile1
   label endwhile1 :
      %13 = 0
      %14 = end == %13

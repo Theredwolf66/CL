@@ -80,8 +80,9 @@ void SymbolsListener::enterFunction(AslParser::FunctionContext *ctx) {
 
 void SymbolsListener::exitFunction(AslParser::FunctionContext *ctx) {
     //Symbols.print();
-    Symbols.popScope();
     std::string ident = ctx->ID()->getText();
+    Symbols.popScope();
+    
     //std::cout << "intentaremos  " << ident << std::endl;
   if (Symbols.findInCurrentScope(ident)) {
       Errors.declaredIdent(ctx->ID());
@@ -111,8 +112,11 @@ void SymbolsListener::exitFunction(AslParser::FunctionContext *ctx) {
     TypesMgr::TypeId tFunc = Types.createFunctionTy(lParamsTy, tRet);
     Symbols.addFunction(ident, tFunc);
     Symbols.setCurrentFunctionTy(tFunc);
+    
+    putTypeDecor(ctx,tFunc);
+    
     //std::cout << Symbols.getCurrentFunctionTy() << std::endl;
-    if((not Symbols.findInCurrentScope(ident)) and ctx->type()) Symbols.addParameter("_result", tRet);
+    
   }
   DEBUG_EXIT();
 }

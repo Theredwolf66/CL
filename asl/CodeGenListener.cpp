@@ -74,6 +74,11 @@ void CodeGenListener::enterFunction(AslParser::FunctionContext *ctx) {
   Symbols.pushThisScope(sc);
   codeCounters.reset();
   subroutine & subrRef = Code.get_last_subroutine();
+  
+  Symbols.setCurrentFunctionTy(getTypeDecor(ctx));
+  if (not Types.isVoidFunction(Symbols.getCurrentFunctionTy())) {
+                  subrRef.add_param("_result");
+  }
 }
 void CodeGenListener::exitFunction(AslParser::FunctionContext *ctx) {
   subroutine & subrRef = Code.get_last_subroutine();
@@ -294,11 +299,12 @@ void CodeGenListener::exitWhileStmt(AslParser::WhileStmtContext *ctx){
     instructionList  code1 = getCodeDecor(ctx->expr());
     instructionList  code2 = getCodeDecor(ctx->statements());
     std::string      label = codeCounters.newLabelWHILE();
+    std::string labelStartWhile = "startWhile"+label;
     std::string labelWhile = "while"+label;
     std::string labelEndwhile = "endwhile"+label;
-    code = code1 || instruction::LABEL(labelWhile)||
+    code = instruction::LABEL(labelStartWhile) || code1 || instruction::LABEL(labelWhile)||
             instruction::FJUMP(addr1, labelEndwhile) ||code2 ||
-            instruction::UJUMP(labelWhile) ||instruction::LABEL(labelEndwhile);
+            instruction::UJUMP(labelStartWhile) ||instruction::LABEL(labelEndwhile);
 
     putCodeDecor(ctx, code);
     DEBUG_EXIT();
