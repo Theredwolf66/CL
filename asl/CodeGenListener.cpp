@@ -726,36 +726,42 @@ void CodeGenListener::enterExprIdent(AslParser::ExprIdentContext *ctx) {
 void CodeGenListener::exitExprIdent(AslParser::ExprIdentContext *ctx) {
   auto identType = getTypeDecor(ctx->ident());
   auto addr1 = getAddrDecor(ctx->ident());
-    putAddrDecor(ctx, addr1);
     
-    if (arrayLocs.count(addr1)) addr1 = arrayLocs[addr1];
+    //if (arrayLocs.count(addr1)) addr1 = arrayLocs[addr1];
    
   if (ctx->INTVAL()) {
-      std::string temp = "%"+codeCounters.newTEMP();
-      std::string temp2 = "%"+codeCounters.newTEMP();
-      instructionList code  = instruction::LOAD(temp2,ctx->INTVAL()->getText());
       
-      if (Symbols.isParameterClass(addr1)) {
-          std::string temp3 = "%"+codeCounters.newTEMP();
-          code = code || instruction::LOAD(temp3,getAddrDecor(ctx->ident()));
-          addr1 = temp3;
-      }
-      code = code || instruction::LOADX(temp,addr1,temp2);
-      putOffsetDecor(ctx, temp);
-      putCodeDecor(ctx, code);
-      putAddrDecor(ctx, temp);
+        std::string temp = "%"+codeCounters.newTEMP();
+        std::string temp2 = "%"+codeCounters.newTEMP();
+        instructionList code  = instruction::LOAD(temp2,ctx->INTVAL()->getText());
+        
+        if (Symbols.isParameterClass(addr1) and not arrayLocs.count(addr1)) {
+            std::string temp3 = "%"+codeCounters.newTEMP();
+            code = code || instruction::LOAD(temp3,getAddrDecor(ctx->ident()));
+            addr1 = temp3;
+        }
+        code = code || instruction::LOADX(temp,addr1,temp2);
+        putOffsetDecor(ctx, temp);
+        putCodeDecor(ctx, code);
+        putAddrDecor(ctx, temp);
+      
       
   }
   else if (ctx->expr()){
       instructionList code = getCodeDecor(ctx->expr());
       
       std::string temp = "%"+codeCounters.newTEMP();
-      auto identType = getTypeDecor(ctx->ident());
-      if (Types.isArrayTy(identType)) {
-          std::string temp2 = "%"+codeCounters.newTEMP();
-          code = code || instruction::LOAD(temp2,getAddrDecor(ctx->ident()));
-          addr1 = temp2;
-      }
+      //if (not arrayLocs.count(addr1)) {
+        auto identType = getTypeDecor(ctx->ident());
+        if (Types.isArrayTy(identType)) {
+            //std::cout << addr1 << " eesta a arraylocs? " << arrayLocs.count(addr1) << std::endl;
+            if (not arrayLocs.count(addr1)) {
+                std::string temp2 = "%"+codeCounters.newTEMP();
+                code = code || instruction::LOAD(temp2,getAddrDecor(ctx->ident()));
+                addr1 = temp2;
+            } else addr1 = arrayLocs[addr1];
+        }
+      //}
       
       code = code || instruction::LOADX(temp,addr1,getOffsetDecor(ctx->expr()));
       putOffsetDecor(ctx, temp);
@@ -763,7 +769,7 @@ void CodeGenListener::exitExprIdent(AslParser::ExprIdentContext *ctx) {
       putAddrDecor(ctx, temp);
   }
   else {
-
+      putAddrDecor(ctx, addr1);
       putOffsetDecor(ctx, getOffsetDecor(ctx->ident()));
       putCodeDecor(ctx, getCodeDecor(ctx->ident()));
   }
